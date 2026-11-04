@@ -16,6 +16,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+/**
+ * Bottom navigation bar for [AppNavItem] entries.
+ *
+ * Draws a divider above the bar and disables tonal elevation, since the surface
+ * color already separates the bar from the content.
+ *
+ * @param modifier Applied to the wrapper column.
+ * @param content Navigation items, normally [AppNavItem] calls.
+ */
 @Composable
 fun AppNavBar(
     modifier: Modifier = Modifier,
@@ -34,6 +43,16 @@ fun AppNavBar(
     }
 }
 
+/**
+ * One destination inside an [AppNavBar].
+ *
+ * Selected items get a primary pill behind the icon and a bold label.
+ *
+ * @param selected Whether this is the current destination.
+ * @param onClick Invoked when the item is tapped.
+ * @param label Text under the icon.
+ * @param icon Icon shown above the label.
+ */
 @Composable
 fun RowScope.AppNavItem(
     selected: Boolean,

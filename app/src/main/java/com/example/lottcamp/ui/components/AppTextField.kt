@@ -22,6 +22,18 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+/**
+ * Text field that uses LottCamp's theming.
+ *
+ * @param value Current text shown in the field.
+ * @param onValueChange Called with the new text on every edit.
+ * @param label Caption above the field, displayed uppercased.
+ * @param modifier Applied to the outer column, which fills the available width.
+ * @param placeholder Shown inside the field while [value] is empty.
+ * @param supportingText Optional helper or validation text below the field.
+ * @param isError When true, the border and [supportingText] use the theme error color.
+ * @param keyboardOptions Keyboard configuration, such as input type and actions.
+ */
 @Composable
 fun AppTextField(
     value: String,

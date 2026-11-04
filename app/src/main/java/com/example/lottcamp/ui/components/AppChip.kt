@@ -13,6 +13,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 
+/**
+ * Selectable chip
+ *
+ * Selection is controlled by the caller: the chip reports taps through [onClick]
+ * and renders itself from [selected].
+ *
+ * @param text Label inside the chip.
+ * @param selected Whether the chip is currently active.
+ * @param onClick Invoked when the chip is tapped.
+ * @param modifier Applied to the chip.
+ */
 @Composable
 fun AppChip(
     text: String,

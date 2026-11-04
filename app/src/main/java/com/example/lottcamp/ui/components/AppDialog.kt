@@ -17,6 +17,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
+/**
+ * Dialog with a title, message, and two actions.
+ *
+ * Buttons wrap onto separate lines when they do not fit side by side.
+ *
+ * @param title Heading at the top of the dialog.
+ * @param message Body text describing the decision.
+ * @param dismissText Label for the secondary, dismissing button.
+ * @param onDismiss Called by the dismiss button and by outside or back dismissal.
+ * @param confirmText Label for the confirming button.
+ * @param onConfirm Called when the confirming button is pressed.
+ */
 @Composable
 fun AppDialog(
     title: String,

@@ -30,6 +30,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
 
+/**
+ * Search field with a search icon and a clear button.
+ *
+ * The clear button appears only while [query] is non-empty.
+ *
+ * @param query Current search text.
+ * @param onQueryChange Called with the new text on every edit.
+ * @param modifier Applied to the field, which fills the available width.
+ * @param placeholder Text shown while [query] is empty.
+ * @param onClear Invoked when the trailing clear icon is tapped.
+ */
 @Composable
 fun AppSearchBar(
     query: String,

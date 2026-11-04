@@ -10,8 +10,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+/**
+ * Style variants available to [AppButton].
+ *
+ * - [Primary] filled with the theme's primary color.
+ * - [Secondary] outlined surface. Used for cancel and alt actions.
+ * - [Danger] filled with the theme's error color. Used for destructive actions.
+ */
 enum class AppButtonVariant { Primary, Secondary, Danger }
 
+/**
+ * Button that applies the LottCamp theme's colors, shape, and padding.
+ *
+ * @param text Label shown inside the button.
+ * @param onClick Invoked when the button is pressed.
+ * @param modifier Applied to the button itself.
+ * @param variant Visual style. See [AppButtonVariant].
+ * @param enabled When false the button is muted and does not respond to input.
+ */
 @Composable
 fun AppButton(
     text: String,

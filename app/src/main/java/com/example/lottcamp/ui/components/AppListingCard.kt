@@ -26,6 +26,22 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Horizontal campsite listing: square image on the left, details on the right.
+ *
+ * Shows a title, location, rating, and price. Passing an [onClick] makes the whole
+ * card clickable, leaving it null keeps the card static.
+ *
+ * @param title Listing name.
+ * @param location Secondary text below the title.
+ * @param rating Average rating, shown as a number and a star row.
+ * @param price Primary price text.
+ * @param modifier Applied to the card, which fills the available width.
+ * @param priceUnit Optional suffix appended to [price], such as `"/night"`,
+ * rendered smaller and in the muted color.
+ * @param onClick Optional handler for opening the listing.
+ * @param image Content drawn in the square image slot. Empty leaves a plain placeholder.
+ */
 @Composable
 fun AppListingCard(
     title: String,

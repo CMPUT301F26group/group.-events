@@ -20,6 +20,18 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+/**
+ * Five-star rating row.
+ *
+ * The row is read-only by default.
+ *
+ * @param rating Value from 0 to [maxRating].
+ * @param modifier Applied to the star row.
+ * @param maxRating Number of stars to draw.
+ * @param readOnly When true, stars are display-only and ignore taps.
+ * @param starSize Width and height of each star; gap scales with it.
+ * @param onRatingChange Called with the tapped star's 1-based index when not read-only.
+ */
 @Composable
 fun AppRatingBar(
     rating: Float,

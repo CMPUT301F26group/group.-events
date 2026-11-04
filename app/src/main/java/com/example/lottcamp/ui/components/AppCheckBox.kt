@@ -22,6 +22,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 
+/**
+ * Checkbox with a label.
+ *
+ * The whole row is tappable, not just the box.
+ *
+ * @param checked Whether the box is filled with a checkmark.
+ * @param onCheckedChange Called with the new state when the row is toggled.
+ * @param label Text shown to the right of the box.
+ * @param modifier Applied to the row.
+ */
 @Composable
 fun AppCheckbox(
     checked: Boolean,
