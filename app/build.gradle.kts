@@ -56,4 +56,5 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(platform("com.google.firebase:firebase-bom:35.1.0"))
     implementation("com.google.firebase:firebase-common")
+    implementation("com.google.firebase:firebase-firestore")
 }
