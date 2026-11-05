@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "677127573551",
+    "project_id": "group-events-52c1d",
+    "storage_bucket": "group-events-52c1d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:677127573551:android:705b9e5133b2ba1d71f6da",
+        "android_client_info": {
+          "package_name": "com.example.lottcamp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNS9JfIoG81OhH4XFH48d488B73G4nbU0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
