@@ -1,5 +1,7 @@
 package com.example.lottcamp
 
+import com.example.lottcamp.domain.Admin
+import com.example.lottcamp.repository.AdminRepository
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
@@ -8,6 +10,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.runBlocking
 
 class TestCampsiteOwner(
     var name: String = "",
