@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -52,7 +51,6 @@ fun AppSearchBar(
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
 
-    // Border only shows while focused; otherwise it blends into the background
     val borderColor = if (focused) {
         MaterialTheme.colorScheme.primary
     } else {
@@ -109,14 +107,12 @@ fun AppSearchBar(
                         contentDescription = "Clear search",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
-                            .minimumInteractiveComponentSize()
                             .clip(CircleShape)
                             .clickable(
                                 onClick = onClear,
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
-                            )
-                            .padding(2.dp),
+                            ),
                     )
                 }
             }
