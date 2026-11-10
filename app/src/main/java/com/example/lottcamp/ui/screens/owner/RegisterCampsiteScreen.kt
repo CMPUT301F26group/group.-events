@@ -1,4 +1,4 @@
-package com.example.lottcamp
+package com.example.lottcamp.ui.screens.owner
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -16,7 +16,7 @@ import com.example.lottcamp.ui.theme.LottCampTheme
 
 
 @Composable
-fun MyCampsiteScreen() {
+fun RegisterCampsiteScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -24,7 +24,7 @@ fun MyCampsiteScreen() {
             .padding(28.dp)
     ) {
         Text(
-            text = "My Campsites",
+            text = "Register Campsite",
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold
         )
@@ -36,8 +36,8 @@ fun MyCampsiteScreen() {
 
 @Preview(showBackground = true)
 @Composable
-fun MyCampsiteScreenPreview() {
+fun RegisterCampsiteScreenPreview() {
     LottCampTheme {
-        MyCampsiteScreen()
+        RegisterCampsiteScreen()
     }
 }
