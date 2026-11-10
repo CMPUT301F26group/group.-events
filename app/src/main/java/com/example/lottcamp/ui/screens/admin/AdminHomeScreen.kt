@@ -18,12 +18,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -39,16 +40,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.lottcamp.controller.AdminHomeController
-import com.example.lottcamp.domain.Campsite
+import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.ui.components.AppChip
 import com.example.lottcamp.ui.components.AppChipVariant
+import com.example.lottcamp.ui.components.AppDivider
+import com.example.lottcamp.ui.components.AppImagePlaceholder
+import com.example.lottcamp.ui.components.AppListRow
 import com.example.lottcamp.ui.components.AppSearchBar
+import com.example.lottcamp.ui.components.AppSectionTitle
 import com.example.lottcamp.ui.theme.LottCampTheme
 
+/**
+ * Admin landing screen: role switcher, search, counts, latest listings and log shortcuts.
+ *
+ * @param modifier Applied to the scrolling column.
+ * @param controller Supplies the data and handles every tap.
+ */
 @Composable
 fun AdminHomeScreen(
     modifier: Modifier = Modifier,
@@ -64,7 +74,7 @@ fun AdminHomeScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Header()
+        Header(controller.role, controller::onRoleSelected)
 
         AppSearchBar(
             query = query,
@@ -104,29 +114,33 @@ fun AdminHomeScreen(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            SectionTitle("Latest listings", Modifier.weight(1f))
+            AppSectionTitle("Latest listings", Modifier.weight(1f))
             LinkText("View all", controller::onViewAllListingsClick)
         }
 
         // listings
         Column {
             controller.latestCampsites.forEachIndexed { index, campsite ->
-                if (index > 0) RowDivider(spacing = 12.dp)
-                ListingRow(campsite, onClick = { controller.onCampsiteClick(campsite) })
+                if (index > 0) AppDivider(spacing = 12.dp)
+                AppListRow(campsite.name, campsite.locationName, { controller.onCampsiteClick(campsite) }) {
+                    AppImagePlaceholder()
+                }
             }
         }
 
-        SectionTitle("Logs")
+        AppSectionTitle("Logs")
         Column {
             LogRow(Icons.Outlined.Notifications, "Notifications", controller::onNotificationsClick)
-            RowDivider(spacing = 16.dp)
+            AppDivider(spacing = 16.dp)
             LogRow(Icons.Outlined.ChatBubbleOutline, "Owner messages", controller::onOwnerMessagesClick)
         }
     }
 }
 
+/** App title with a chip that opens a menu for switching between the admin's roles. */
 @Composable
-private fun Header() {
+private fun Header(role: UserRole, onRoleSelected: (UserRole) -> Unit) {
+    var menuOpen by remember { mutableStateOf(false) }
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
@@ -140,13 +154,27 @@ private fun Header() {
             fontWeight = FontWeight.Medium,
             modifier = Modifier.weight(1f),
         )
-        AppChip(
-            text = "Admin ▾",
-            selected = false,
-            onClick = {},
-            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-            variant = AppChipVariant.Secondary,
-        )
+        Box {
+            AppChip(
+                text = "${role.label} ▾",
+                selected = false,
+                onClick = { menuOpen = true },
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                variant = AppChipVariant.Secondary,
+            )
+            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                UserRole.entries.forEach {
+                    DropdownMenuItem(
+                        text = { Text(it.label) },
+                        onClick = {
+                            onRoleSelected(it)
+                            menuOpen = false
+                        },
+                        trailingIcon = { if (it == role) Icon(Icons.Default.Check, contentDescription = "Selected") },
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -201,45 +229,6 @@ private fun StatTile(number: Int, label: String, icon: ImageVector, onClick: () 
 }
 
 @Composable
-private fun ListingRow(campsite: Campsite, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(56.dp)
-                .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentAlignment = Alignment.Center,
-        ) {
-            // Image needs to go here
-        }
-        Spacer(Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(campsite.name, style = MaterialTheme.typography.titleMedium)
-            Text(campsite.locationName, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Icon(
-            Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-/** Divider between list rows. [spacing] is the gap above and below the line. */
-@Composable
-private fun RowDivider(spacing: Dp) {
-    HorizontalDivider(
-        modifier = Modifier.padding(vertical = spacing),
-        color = MaterialTheme.colorScheme.outline,
-    )
-}
-
-@Composable
 private fun LogRow(icon: ImageVector, title: String, onClick: () -> Unit) {
     Row(
         modifier = Modifier
@@ -252,11 +241,6 @@ private fun LogRow(icon: ImageVector, title: String, onClick: () -> Unit) {
         Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
         LinkText("View", onClick, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
-}
-
-@Composable
-private fun SectionTitle(text: String, modifier: Modifier = Modifier) {
-    Text(text, style = MaterialTheme.typography.titleLarge, modifier = modifier)
 }
 
 @Composable

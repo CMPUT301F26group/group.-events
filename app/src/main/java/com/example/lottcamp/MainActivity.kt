@@ -20,7 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.lottcamp.ui.components.AppNavBar
 import com.example.lottcamp.ui.components.AppNavItem
-import com.example.lottcamp.ui.screens.admin.AdminHomeScreen
+import com.example.lottcamp.ui.screens.admin.AdminNavGraph
 import com.example.lottcamp.ui.theme.LottCampTheme
 
 class MainActivity : ComponentActivity() {
@@ -63,9 +63,8 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) { innerPadding ->
-                    // Only the Explore tab has a screen so far
                     if (tab == 0) {
-                        AdminHomeScreen(modifier = Modifier.padding(innerPadding))
+                        AdminNavGraph(modifier = Modifier.padding(innerPadding))
                     }
                 }
             }
