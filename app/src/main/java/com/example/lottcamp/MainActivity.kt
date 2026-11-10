@@ -4,8 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -19,11 +17,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.example.lottcamp.ui.components.AppNavItem
 import com.example.lottcamp.ui.components.AppNavBar
+import com.example.lottcamp.ui.components.AppNavItem
+import com.example.lottcamp.ui.screens.admin.AdminHomeScreen
 import com.example.lottcamp.ui.theme.LottCampTheme
 
 class MainActivity : ComponentActivity() {
@@ -33,6 +30,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             LottCampTheme {
                 var tab by rememberSaveable { mutableIntStateOf(0) }
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     containerColor = MaterialTheme.colorScheme.background,
@@ -65,15 +63,9 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) { innerPadding ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                            .padding(24.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-
+                    // Only the Explore tab has a screen so far
+                    if (tab == 0) {
+                        AdminHomeScreen(modifier = Modifier.padding(innerPadding))
                     }
                 }
             }

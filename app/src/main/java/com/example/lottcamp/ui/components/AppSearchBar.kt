@@ -52,10 +52,11 @@ fun AppSearchBar(
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
 
+    // Border only shows while focused; otherwise it blends into the background
     val borderColor = if (focused) {
         MaterialTheme.colorScheme.primary
     } else {
-        MaterialTheme.colorScheme.outline
+        MaterialTheme.colorScheme.secondary
     }
 
     BasicTextField(
@@ -64,7 +65,7 @@ fun AppSearchBar(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                color = MaterialTheme.colorScheme.surface,
+                color = MaterialTheme.colorScheme.secondary,
                 shape = MaterialTheme.shapes.medium,
             )
             .border(
