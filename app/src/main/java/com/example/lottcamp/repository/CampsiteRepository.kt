@@ -52,6 +52,16 @@ class CampsiteRepository(
         return snapshot.documents.mapNotNull { it.toObject(CampsiteDoc::class.java)?.toDomain() }
     }
 
+    suspend fun searchCampsitesByLocation(location: String): List<Campsite> {
+        val snapshot = collection
+            .orderBy("locationName")
+            .startAt(location)
+            .endAt(location + "\uf8ff")
+            .get()
+            .await()
+        return snapshot.documents.mapNotNull { it.toObject(CampsiteDoc::class.java)?.toDomain() }
+    }
+
     suspend fun searchCampsitesByTags(tags: List<String>): List<Campsite> {
         if (tags.isEmpty()) return getAllCampsites()
 

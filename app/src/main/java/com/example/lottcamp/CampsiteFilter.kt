@@ -6,6 +6,7 @@ import com.example.lottcamp.repository.LotteryRepository
 import java.time.LocalDate
 
 data class CampsiteFilter(
+    val name: String? = null,
     val locationName: String? = null,
     val minOccupancy: Int? = null,
     val maxPricePerNight: Double? = null,
@@ -14,19 +15,22 @@ data class CampsiteFilter(
     val tags: List<String> = emptyList(),
 ) {
     suspend fun getMatches(campsiteRepo: CampsiteRepository, lotteryRepo: LotteryRepository): List<Campsite> {
-        // TODO: need to query campsite according to availability, need the lottery repo for this
-        var matches = emptyList<Campsite>()
+        var matches = if (name != null)
+            campsiteRepo.searchCampsitesByName(locationName!!)
+        else
+            campsiteRepo.getAllCampsites()  // or however you fetch everything
 
-        locationName?.let { name ->
-            matches = campsiteRepo.searchCampsitesByName(name)
+        if (tags.isNotEmpty()) {
+            matches = matches.intersect(campsiteRepo.searchCampsitesByTags(tags)).toList()
         }
-        matches = matches.intersect(campsiteRepo.searchCampsitesByTags(tags)).toList()
-
         minOccupancy?.let { guests ->
             matches = matches.intersect(campsiteRepo.searchCampsitesByOccupancy(guests)).toList()
         }
         maxPricePerNight?.let { price ->
             matches = matches.intersect(campsiteRepo.searchCampsitesByMaxPrice(price)).toList()
+        }
+        locationName?.let { name ->
+            matches = campsiteRepo.searchCampsitesByLocation(name)
         }
         return matches
     }

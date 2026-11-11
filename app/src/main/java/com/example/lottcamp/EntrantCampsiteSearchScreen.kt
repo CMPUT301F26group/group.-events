@@ -49,7 +49,7 @@ import com.example.lottcamp.repository.LotteryRepository
 fun EntrantCampsiteSearchScreen(navController: NavController, modifier: Modifier) {
     var searchQuery by remember { mutableStateOf("") }
     var currentFilter by remember { mutableStateOf(CampsiteFilter())}
-    var searchResults = remember { listOf<Campsite>()}
+    var searchResults by remember { mutableStateOf(listOf<Campsite>()) }
     val campsiteRepo = CampsiteRepository()
     val lotteryRepo = LotteryRepository()
 
@@ -91,6 +91,14 @@ fun EntrantCampsiteSearchScreen(navController: NavController, modifier: Modifier
                     AppFilterTag(
                         text = name,
                         onClick = { currentFilter = currentFilter.copy(locationName = null) },
+                    )
+                }
+            }
+            currentFilter.name?.let { name ->
+                item {
+                    AppFilterTag(
+                        text = name,
+                        onClick = { currentFilter = currentFilter.copy(name = null) },
                     )
                 }
             }
