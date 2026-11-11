@@ -32,50 +32,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             LottCampTheme {
-                var tab by rememberSaveable { mutableIntStateOf(0) }
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    containerColor = MaterialTheme.colorScheme.background,
-                    bottomBar = {
-                        AppNavBar {
-                            AppNavItem(
-                                selected = tab == 0,
-                                onClick = { tab = 0 },
-                                label = "Explore",
-                                icon = Icons.Outlined.Home,
-                            )
-                            AppNavItem(
-                                selected = tab == 1,
-                                onClick = { tab = 1 },
-                                label = "Bookings",
-                                icon = Icons.Outlined.DateRange,
-                            )
-                            AppNavItem(
-                                selected = tab == 2,
-                                onClick = { tab = 2 },
-                                label = "Messages",
-                                icon = Icons.Outlined.Email,
-                            )
-                            AppNavItem(
-                                selected = tab == 3,
-                                onClick = { tab = 3 },
-                                label = "Profile",
-                                icon = Icons.Outlined.Person,
-                            )
-                        }
-                    }
-                ) { innerPadding ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                            .padding(24.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-
-                    }
-                }
+                LottoCampAppEntrant()
             }
         }
     }
