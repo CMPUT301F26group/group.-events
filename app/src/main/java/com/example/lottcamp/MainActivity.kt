@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.lottcamp.repository.AdminRepository
 import com.example.lottcamp.ui.screens.admin.AdminNavGraph
+import com.example.lottcamp.ui.screens.entrant.LottoCampAppEntrant
 import com.example.lottcamp.ui.theme.LottCampTheme
 
 class MainActivity : ComponentActivity() {

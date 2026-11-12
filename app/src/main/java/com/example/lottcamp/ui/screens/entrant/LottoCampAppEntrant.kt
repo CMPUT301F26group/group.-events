@@ -1,4 +1,4 @@
-package com.example.lottcamp
+package com.example.lottcamp.ui.screens.entrant
 
 import android.os.Build
 import androidx.annotation.RequiresApi

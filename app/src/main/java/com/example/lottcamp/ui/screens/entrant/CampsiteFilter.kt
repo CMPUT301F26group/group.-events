@@ -1,4 +1,4 @@
-package com.example.lottcamp
+package com.example.lottcamp.ui.screens.entrant
 
 import com.example.lottcamp.domain.Campsite
 import com.example.lottcamp.repository.CampsiteRepository
