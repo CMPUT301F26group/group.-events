@@ -165,6 +165,9 @@ fun EntrantCampsiteSearchScreen(navController: NavController, modifier: Modifier
                             rating = campsite.averageRating.toFloat(),
                             price = "\$${campsite.pricePerNight}",
                             priceUnit = "/ Night",
+                            onClick = {
+                                navController.navigate("entrant-campsite-details-screen/${campsite.id}")
+                            }
                         )
                     }
                 }

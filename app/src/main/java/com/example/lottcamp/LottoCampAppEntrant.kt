@@ -17,12 +17,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.lottcamp.ui.components.AppNavBar
 import com.example.lottcamp.ui.components.AppNavItem
 import com.example.lottcamp.ui.theme.LottCampTheme
@@ -81,6 +81,16 @@ fun LottoCampAppEntrant() {
                 composable("entrant-bookings-screen") { EntrantBookingsScreen(navController, Modifier.padding(innerPadding)) }
                 composable("entrant-messages-screen") { EntrantMessagesScreen(navController, Modifier.padding(innerPadding)) }
                 composable("entrant-profile-screen") { EntrantProfileScreen(navController, Modifier.padding(innerPadding)) }
+                composable(
+                    "entrant-campsite-details-screen/{campsiteId}",
+                    arguments = listOf(
+                        navArgument("campsiteId") { type = NavType.StringType }
+                    )
+                ) { backStackEntry ->
+                    val campsiteId = backStackEntry.arguments?.getString("campsiteId") ?: ""
+                    EntrantCampsiteDetailsScreen(navController, Modifier.padding(innerPadding), campsiteId)
+                }
+
             }
         }
     }
