@@ -41,4 +41,57 @@ class CampsiteRepository(
     suspend fun deleteCampsite(id: String) {
         collection.document(id).delete().await()
     }
+
+    suspend fun searchCampsitesByName(query: String): List<Campsite> {
+        val snapshot = collection
+            .orderBy("name")
+            .startAt(query)
+            .endAt(query + "\uf8ff")
+            .get()
+            .await()
+        return snapshot.documents.mapNotNull { it.toObject(CampsiteDoc::class.java)?.toDomain() }
+    }
+
+    suspend fun searchCampsitesByLocation(location: String): List<Campsite> {
+        val snapshot = collection
+            .orderBy("locationName")
+            .startAt(location)
+            .endAt(location + "\uf8ff")
+            .get()
+            .await()
+        return snapshot.documents.mapNotNull { it.toObject(CampsiteDoc::class.java)?.toDomain() }
+    }
+
+    suspend fun searchCampsitesByTags(tags: List<String>): List<Campsite> {
+        if (tags.isEmpty()) return getAllCampsites()
+
+        val snapshot = collection
+            .whereArrayContains("tags", tags.first())
+            .get()
+            .await()
+
+        return snapshot.documents
+            .mapNotNull { it.toObject(CampsiteDoc::class.java)?.toDomain() }
+            .filter { campsite -> campsite.tags.containsAll(tags) }
+    }
+
+    suspend fun searchCampsitesByOccupancy(guests: Int): List<Campsite> {
+        val snapshot = collection
+            .whereGreaterThanOrEqualTo("maxOccupancy", guests)
+            .get()
+            .await()
+        return snapshot.documents.mapNotNull { it.toObject(CampsiteDoc::class.java)?.toDomain() }
+    }
+
+    suspend fun searchCampsitesByMaxPrice(maxPricePerNight: Double): List<Campsite> {
+        val snapshot = collection
+            .whereLessThanOrEqualTo("pricePerNight", maxPricePerNight)
+            .get()
+            .await()
+        return snapshot.documents.mapNotNull { it.toObject(CampsiteDoc::class.java)?.toDomain() }
+    }
+
+    suspend fun getAllTags(): List<String> {
+        return getAllCampsites().flatMap { it.tags }.distinct()
+    }
 }
