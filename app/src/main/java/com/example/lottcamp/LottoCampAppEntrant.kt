@@ -90,7 +90,7 @@ fun LottoCampAppEntrant() {
                     val campsiteId = backStackEntry.arguments?.getString("campsiteId") ?: ""
                     EntrantCampsiteDetailsScreen(navController, Modifier.padding(innerPadding), campsiteId)
                 }
-
+                composable("entrant-campsite-filter-screen") { EntrantCampsiteFilterScreen(navController, Modifier.padding(innerPadding)) }
             }
         }
     }

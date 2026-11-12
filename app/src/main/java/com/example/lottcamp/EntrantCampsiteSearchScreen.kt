@@ -74,7 +74,9 @@ fun EntrantCampsiteSearchScreen(navController: NavController, modifier: Modifier
             AppIconButton(
                 icon = Icons.Filled.FilterList,
                 contentDescription = "Filter for campsites based on location, capacity, price and more",
-                onClick = {},
+                onClick = {
+                    navController.navigate("entrant-campsite-filter-screen")
+                },
             )
             AppIconButton(
                 icon = Icons.Filled.QrCode2,

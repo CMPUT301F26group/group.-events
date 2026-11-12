@@ -50,7 +50,8 @@ class RepositoryTest {
             "Campsite 1",
             "Edmonton, AB",
             pricePerNight = 1000.0,
-            maxOccupancy = 3
+            maxOccupancy = 3,
+            tags = listOf("Has cats", "Fire pit", "Hot tub", "Tables")
         )
         val campsite2 = Campsite(
             "campsite2",
@@ -59,7 +60,7 @@ class RepositoryTest {
             "St. Paul, AB",
             pricePerNight = 0.000005,
             maxOccupancy = 100000,
-            tags = listOf("Terrifying", "Bone chilling", "Sunny")
+            tags = listOf("Terrifying", "Bone chilling", "Bleak")
         )
         val lottery = Lottery(
             "lottery1",

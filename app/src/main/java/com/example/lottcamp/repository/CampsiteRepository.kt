@@ -90,4 +90,8 @@ class CampsiteRepository(
             .await()
         return snapshot.documents.mapNotNull { it.toObject(CampsiteDoc::class.java)?.toDomain() }
     }
+
+    suspend fun getAllTags(): List<String> {
+        return getAllCampsites().flatMap { it.tags }.distinct()
+    }
 }
