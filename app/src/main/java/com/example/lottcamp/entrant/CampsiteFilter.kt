@@ -16,7 +16,7 @@ data class CampsiteFilter(
 ) {
     suspend fun getMatches(campsiteRepo: CampsiteRepository, lotteryRepo: LotteryRepository): List<Campsite> {
         var matches = if (name != null)
-            campsiteRepo.searchCampsitesByName(locationName!!)
+            campsiteRepo.searchCampsitesByName(name)
         else
             campsiteRepo.getAllCampsites()  // or however you fetch everything
 
@@ -29,8 +29,8 @@ data class CampsiteFilter(
         maxPricePerNight?.let { price ->
             matches = matches.intersect(campsiteRepo.searchCampsitesByMaxPrice(price)).toList()
         }
-        locationName?.let { name ->
-            matches = campsiteRepo.searchCampsitesByLocation(name)
+        locationName?.let { location ->
+            matches = matches.intersect(campsiteRepo.searchCampsitesByLocation(location)).toList()
         }
         return matches
     }
