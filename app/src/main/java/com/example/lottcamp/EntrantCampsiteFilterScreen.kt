@@ -1,5 +1,7 @@
 package com.example.lottcamp
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -28,9 +30,23 @@ import androidx.navigation.NavController
 import com.example.lottcamp.repository.CampsiteRepository
 import com.example.lottcamp.ui.components.AppBackButton
 import com.example.lottcamp.ui.components.AppButton
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
+@RequiresApi(Build.VERSION_CODES.O)
+private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+@RequiresApi(Build.VERSION_CODES.O)
+private fun String.toLocalDateOrNull(): LocalDate? = try {
+    LocalDate.parse(this, formatter)
+} catch (e: DateTimeParseException) {
+    null
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun EntrantCampsiteFilterScreen(navController: NavController, modifier: Modifier = Modifier) {
+fun EntrantCampsiteFilterScreen(navController: NavController, modifier: Modifier = Modifier, viewModel: SearchViewModel) {
     var location by remember { mutableStateOf("") }
     var startDate by remember { mutableStateOf("") }
     var endDate by remember { mutableStateOf("") }
@@ -68,7 +84,7 @@ fun EntrantCampsiteFilterScreen(navController: NavController, modifier: Modifier
             OutlinedTextField(
                 value = startDate,
                 onValueChange = { startDate = it },
-                label = { Text("Start date") },
+                label = { Text("Start date (YYYY-MM-DD)") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -76,7 +92,7 @@ fun EntrantCampsiteFilterScreen(navController: NavController, modifier: Modifier
             OutlinedTextField(
                 value = endDate,
                 onValueChange = { endDate = it },
-                label = { Text("End date") },
+                label = { Text("End date (YYYY-MM-DD)") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -113,7 +129,19 @@ fun EntrantCampsiteFilterScreen(navController: NavController, modifier: Modifier
 
         AppButton(
             "Show matching campsites",
-            onClick = { navController.navigate("entrant-campsite-search-screen") },
+            onClick = {
+                viewModel.setFilter(
+                    CampsiteFilter(
+                        name = location.ifBlank { null },
+                        locationName = location.ifBlank { null },
+                        minOccupancy = guests.toIntOrNull(),
+                        startDate = startDate.toLocalDateOrNull(),
+                        endDate = endDate.toLocalDateOrNull(),
+                        tags = selectedTags.toList()
+                    )
+                )
+                navController.navigate("entrant-campsite-search-screen")
+            },
             modifier.fillMaxWidth()
         )
 

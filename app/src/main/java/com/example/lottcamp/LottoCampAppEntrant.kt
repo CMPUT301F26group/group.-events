@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -30,6 +31,8 @@ import com.example.lottcamp.ui.theme.LottCampTheme
 @Composable
 fun LottoCampAppEntrant() {
     val navController = rememberNavController()
+    val searchViewModel: SearchViewModel = viewModel()
+
     LottCampTheme {
         var tab by rememberSaveable { mutableIntStateOf(0) }
         Scaffold(
@@ -77,7 +80,7 @@ fun LottoCampAppEntrant() {
             }
         ) { innerPadding ->
             NavHost(navController = navController, startDestination = "entrant-campsite-search-screen") {
-                composable("entrant-campsite-search-screen") { EntrantCampsiteSearchScreen(navController, Modifier.padding(innerPadding)) }
+                composable("entrant-campsite-search-screen") { EntrantCampsiteSearchScreen(navController, Modifier.padding(innerPadding), searchViewModel) }
                 composable("entrant-bookings-screen") { EntrantBookingsScreen(navController, Modifier.padding(innerPadding)) }
                 composable("entrant-messages-screen") { EntrantMessagesScreen(navController, Modifier.padding(innerPadding)) }
                 composable("entrant-profile-screen") { EntrantProfileScreen(navController, Modifier.padding(innerPadding)) }
@@ -90,7 +93,7 @@ fun LottoCampAppEntrant() {
                     val campsiteId = backStackEntry.arguments?.getString("campsiteId") ?: ""
                     EntrantCampsiteDetailsScreen(navController, Modifier.padding(innerPadding), campsiteId)
                 }
-                composable("entrant-campsite-filter-screen") { EntrantCampsiteFilterScreen(navController, Modifier.padding(innerPadding)) }
+                composable("entrant-campsite-filter-screen") { EntrantCampsiteFilterScreen(navController, Modifier.padding(innerPadding), searchViewModel) }
             }
         }
     }

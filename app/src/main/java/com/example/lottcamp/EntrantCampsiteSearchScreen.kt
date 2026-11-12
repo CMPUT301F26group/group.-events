@@ -3,7 +3,6 @@ package com.example.lottcamp
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -12,21 +11,12 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.QrCode2
-import androidx.compose.material.icons.outlined.DateRange
-import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.lottcamp.ui.theme.LottCampTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,20 +25,23 @@ import com.example.lottcamp.domain.Campsite
 import com.example.lottcamp.ui.components.AppFilterTag
 import com.example.lottcamp.ui.components.AppIconButton
 import com.example.lottcamp.ui.components.AppListingCard
-import com.example.lottcamp.ui.components.AppNavBar
-import com.example.lottcamp.ui.components.AppNavItem
 import com.example.lottcamp.ui.components.AppSearchBar
 import kotlin.collections.listOf
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.navigation.NavController
 import com.example.lottcamp.repository.CampsiteRepository
 import com.example.lottcamp.repository.LotteryRepository
 
 @Composable
-fun EntrantCampsiteSearchScreen(navController: NavController, modifier: Modifier) {
+fun EntrantCampsiteSearchScreen(
+    navController: NavController,
+    modifier: Modifier,
+    viewModel: SearchViewModel
+) {
     var searchQuery by remember { mutableStateOf("") }
-    var currentFilter by remember { mutableStateOf(CampsiteFilter())}
+    val currentFilter by viewModel.filter.collectAsState()
     var searchResults by remember { mutableStateOf(listOf<Campsite>()) }
     val campsiteRepo = CampsiteRepository()
     val lotteryRepo = LotteryRepository()
@@ -92,7 +85,7 @@ fun EntrantCampsiteSearchScreen(navController: NavController, modifier: Modifier
                 item {
                     AppFilterTag(
                         text = name,
-                        onClick = { currentFilter = currentFilter.copy(locationName = null) },
+                        onClick = { viewModel.setFilter(currentFilter.copy(locationName = null)) },
                     )
                 }
             }
@@ -100,7 +93,7 @@ fun EntrantCampsiteSearchScreen(navController: NavController, modifier: Modifier
                 item {
                     AppFilterTag(
                         text = name,
-                        onClick = { currentFilter = currentFilter.copy(name = null) },
+                        onClick = { viewModel.setFilter(currentFilter.copy(name = null)) },
                     )
                 }
             }
@@ -108,7 +101,7 @@ fun EntrantCampsiteSearchScreen(navController: NavController, modifier: Modifier
                 item {
                     AppFilterTag(
                         text = "${currentFilter.startDate}-${currentFilter.endDate}",
-                        onClick = { currentFilter = currentFilter.copy(startDate = null, endDate = null) },
+                        onClick = { viewModel.setFilter(currentFilter.copy(startDate = null, endDate = null)) },
                     )
                 }
             }
@@ -116,7 +109,7 @@ fun EntrantCampsiteSearchScreen(navController: NavController, modifier: Modifier
                 item {
                     AppFilterTag(
                         text = "$guests guests",
-                        onClick = { currentFilter = currentFilter.copy(minOccupancy = null) },
+                        onClick = { viewModel.setFilter(currentFilter.copy(minOccupancy = null)) },
                     )
                 }
             }
@@ -124,14 +117,14 @@ fun EntrantCampsiteSearchScreen(navController: NavController, modifier: Modifier
                 item {
                     AppFilterTag(
                         text = "\$$price",
-                        onClick = { currentFilter = currentFilter.copy(maxPricePerNight = null) },
+                        onClick = { viewModel.setFilter(currentFilter.copy(maxPricePerNight = null)) },
                     )
                 }
             }
             items(currentFilter.tags) { tag ->
                 AppFilterTag(
                     text = tag,
-                    onClick = { currentFilter = currentFilter.copy(tags = currentFilter.tags - tag) },
+                    onClick = { viewModel.setFilter(currentFilter.copy(tags = currentFilter.tags - tag)) },
                 )
             }
         }
@@ -160,7 +153,6 @@ fun EntrantCampsiteSearchScreen(navController: NavController, modifier: Modifier
             if (!searchResults.isEmpty()) {
                 for (campsite in searchResults) {
                     item {
-                        // TODO: Add campsite thumbnail
                         AppListingCard(
                             title = campsite.name,
                             location = campsite.locationName,
@@ -174,46 +166,6 @@ fun EntrantCampsiteSearchScreen(navController: NavController, modifier: Modifier
                     }
                 }
             }
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun EntrantCampsiteSearchScreenPreview() {
-    var tab by rememberSaveable { mutableIntStateOf(0) }
-    LottCampTheme {
-        Scaffold(
-            bottomBar = {
-                AppNavBar {
-                    AppNavItem(
-                        selected = tab == 0,
-                        onClick = { tab = 0 },
-                        label = "Explore",
-                        icon = Icons.Outlined.Home,
-                    )
-                    AppNavItem(
-                        selected = tab == 1,
-                        onClick = { tab = 1 },
-                        label = "Bookings",
-                        icon = Icons.Outlined.DateRange,
-                    )
-                    AppNavItem(
-                        selected = tab == 2,
-                        onClick = { tab = 2 },
-                        label = "Messages",
-                        icon = Icons.Outlined.Email,
-                    )
-                    AppNavItem(
-                        selected = tab == 3,
-                        onClick = { tab = 3 },
-                        label = "Profile",
-                        icon = Icons.Outlined.Person,
-                    )
-                }
-            }
-        ) { innerPadding ->
-            Text("bingus", Modifier.padding(innerPadding))
         }
     }
 }
