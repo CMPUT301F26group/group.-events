@@ -34,9 +34,11 @@ import com.example.lottcamp.ui.components.AppImagePlaceholder
 import com.example.lottcamp.ui.components.AppListRow
 import com.example.lottcamp.ui.components.AppMutedText
 import com.example.lottcamp.ui.components.AppRatingBar
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 private val userFilters = listOf("All users" to null, "Entrants" to UserRole.ENTRANT, "Owners" to UserRole.OWNER, "Admins" to UserRole.ADMIN)
-private val campsiteFilters = listOf("All campsites" to null, "Active" to false, "Removed" to true)
 private val imageFilters = listOf("All images" to null, "Campsites" to ImageType.CAMPSITE, "Profiles" to ImageType.PROFILE)
 private val notificationFilters = listOf("All" to null, "System" to true, "Owner" to false)
 
@@ -74,7 +76,7 @@ fun AdminUsersScreen(controller: AdminController, onBack: () -> Unit, onUserClic
 }
 
 /**
- * Lets an admin search and browse every campsite, including removed ones (US 03.04.01).
+ * Lets an admin search and browse every campsite (US 03.04.01).
  *
  * @param controller Supplies the campsites.
  * @param onBack Invoked when the back arrow is tapped.
@@ -83,8 +85,7 @@ fun AdminUsersScreen(controller: AdminController, onBack: () -> Unit, onUserClic
 @Composable
 fun AdminCampsitesScreen(controller: AdminController, onBack: () -> Unit, onCampsiteClick: (Campsite) -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }
-    var filter by rememberSaveable { mutableIntStateOf(0) }
-    val campsites = controller.searchCampsites(query, campsiteFilters[filter].second)
+    val campsites = controller.searchCampsites(query)
 
     AdminListPage(
         title = "Search campsites",
@@ -92,9 +93,6 @@ fun AdminCampsitesScreen(controller: AdminController, onBack: () -> Unit, onCamp
         query = query,
         onQueryChange = { query = it },
         placeholder = "Search name, location or campsite ID",
-        filters = campsiteFilters.map { it.first },
-        selectedFilter = filter,
-        onFilterSelect = { filter = it },
         sectionTitle = "Campsites",
         countText = "${campsites.size} campsite${if (campsites.size == 1) "" else "s"}",
     ) {
@@ -171,7 +169,7 @@ fun AdminNotificationsScreen(controller: AdminController, onBack: () -> Unit, in
         onFilterSelect = { filter = it },
     ) {
         items(logs, key = { it.id }) { log ->
-            LogEntry(log.title, "${log.sender} → ${log.recipient}", log.message, log.time, status = log.status)
+            LogEntry(log.title, "${log.sender} → ${log.recipient}", log.message, formatTime(log.sentAt), status = log.status)
             // Gap above the line matches the list's 16dp gap below it
             HorizontalDivider(Modifier.padding(top = 16.dp), color = MaterialTheme.colorScheme.outline)
         }
@@ -201,7 +199,7 @@ fun AdminMessagesScreen(controller: AdminController, onBack: () -> Unit) {
                 title = "${log.sender} → ${log.recipient}",
                 subtitle = "${log.campsiteName} · ${log.reservationId}",
                 body = log.message,
-                time = log.time,
+                time = formatTime(log.sentAt),
                 boxed = true,
             )
         }
@@ -251,9 +249,13 @@ fun AdminReviewsScreen(controller: AdminController, campsiteId: String, onBack: 
                     text = "Remove review",
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.clickable { controller.removeReview(review.id) },
+                    modifier = Modifier.clickable { controller.removeReview(review) },
                 )
             }
         }
     }
 }
+
+/** Formats [millis] like "Nov 10, 2026 · 4:00 PM", or returns "" when the time is unknown (0). */
+private fun formatTime(millis: Long): String =
+    if (millis == 0L) "" else SimpleDateFormat("MMM d, yyyy · h:mm a", Locale.getDefault()).format(Date(millis))

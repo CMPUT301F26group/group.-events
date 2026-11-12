@@ -9,24 +9,22 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import com.example.lottcamp.controller.AdminController
+import com.example.lottcamp.repository.SampleAdminRepository
 import com.example.lottcamp.ui.screens.admin.AdminNavGraph
 import com.example.lottcamp.ui.theme.LottCampTheme
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-/** UI tests that click through the admin screens. */
+/** UI tests that click through the admin screens, using sample data instead of Firestore. */
 class AdminScreensTest {
 
     @get:Rule
     val rule = createComposeRule()
 
-    private val controller = AdminController()
-
     @Before
     fun setUp() {
-        rule.setContent { LottCampTheme { AdminNavGraph(controller = controller) } }
+        rule.setContent { LottCampTheme { AdminNavGraph(data = SampleAdminRepository()) } }
     }
 
     private fun click(text: String) = rule.onAllNodesWithText(text).onFirst().performClick()
@@ -98,16 +96,14 @@ class AdminScreensTest {
     }
 
     @Test
-    fun campsite_removeMovesItToRemovedFilter() {
+    fun campsite_removeDeletesIt() {
         click("View all")
         click("Meadow Ridge")
         rule.onNodeWithText("Campsite details").assertIsDisplayed()
         click("Remove campsite")
         click("Remove")
-        click("Active")
+        rule.onNodeWithText("2 campsites").assertIsDisplayed()
         assertGone("Meadow Ridge")
-        click("Removed")
-        rule.onNodeWithText("Meadow Ridge").assertIsDisplayed()
     }
 
     @Test

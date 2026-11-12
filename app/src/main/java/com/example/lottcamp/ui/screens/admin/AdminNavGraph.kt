@@ -1,10 +1,14 @@
 package com.example.lottcamp.ui.screens.admin
 
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -12,22 +16,37 @@ import androidx.navigation.navArgument
 import com.example.lottcamp.controller.AdminController
 import com.example.lottcamp.controller.AdminHomeController
 import com.example.lottcamp.controller.AdminRoutes
+import com.example.lottcamp.repository.AdminRepository
 
 /**
  * Navigation between all admin screens, starting at the admin home screen.
+ * Loads the admin data when first shown, and shows a dialog if loading or a removal fails.
  *
  * @param modifier Applied to the navigation host.
- * @param controller Admin controller shared by every screen.
- * @param navController Controls the back stack; exposed for tests.
+ * @param data Where the admin data comes from. Tests pass [com.example.lottcamp.repository.SampleAdminRepository].
  */
 @Composable
 fun AdminNavGraph(
     modifier: Modifier = Modifier,
-    controller: AdminController = remember { AdminController() },
-    navController: NavHostController = rememberNavController(),
+    data: AdminRepository = AdminRepository(),
 ) {
+    val scope = rememberCoroutineScope()
+    val controller = remember { AdminController(data, scope) }
+    val navController = rememberNavController()
     val back: () -> Unit = { navController.popBackStack() }
     val go: (String) -> Unit = { navController.navigate(it) }
+
+    // Load the data once, when the admin screens first open
+    LaunchedEffect(Unit) { controller.refresh() }
+
+    controller.error?.let { message ->
+        AlertDialog(
+            onDismissRequest = { controller.clearError() },
+            confirmButton = { TextButton(onClick = { controller.clearError() }) { Text("OK") } },
+            title = { Text("Something went wrong") },
+            text = { Text(message) },
+        )
+    }
 
     NavHost(navController, startDestination = AdminRoutes.HOME, modifier = modifier) {
         composable(AdminRoutes.HOME) {

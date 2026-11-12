@@ -5,6 +5,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.lottcamp.controller.AdminController
@@ -33,6 +38,9 @@ fun AdminUserDetailScreen(
 ) {
     val user = controller.user(userId) ?: return
     val isOwner = user.role == UserRole.OWNER
+    // Activity counts load from the database after the page opens
+    var activity by remember { mutableStateOf(emptyList<Pair<String, String>>()) }
+    LaunchedEffect(user.id) { activity = controller.userActivity(user) }
 
     AdminDetailPage(
         title = if (isOwner) "Owner details" else "User details",
@@ -40,9 +48,9 @@ fun AdminUserDetailScreen(
         sections = listOf(
             DetailSection(
                 "Personal information",
-                listOf("Email" to user.email, "Phone" to user.phone, "Joined" to user.joined),
+                listOf("Email" to user.email, "Phone" to user.phone),
             ),
-            DetailSection("Activity", controller.userActivity(user)),
+            DetailSection("Activity", activity),
         ),
         secondaryText = if (isOwner) "View campsites" else "View notification logs",
         onSecondary = if (isOwner) onViewCampsites else onViewNotifications,
@@ -50,7 +58,7 @@ fun AdminUserDetailScreen(
         confirmTitle = "Remove profile?",
         confirmMessage = "${user.name}'s profile will be permanently removed. This can't be undone.",
         onRemove = {
-            controller.removeUser(user.id)
+            controller.removeUser(user)
             onBack()
         },
     ) {
@@ -74,6 +82,9 @@ fun AdminCampsiteDetailScreen(
     onViewReviews: () -> Unit,
 ) {
     val campsite = controller.campsite(campsiteId) ?: return
+    // Activity counts load from the database after the page opens
+    var activity by remember { mutableStateOf(emptyList<Pair<String, String>>()) }
+    LaunchedEffect(campsite.id) { activity = controller.campsiteActivity(campsite) }
 
     AdminDetailPage(
         title = "Campsite details",
@@ -85,10 +96,9 @@ fun AdminCampsiteDetailScreen(
                     "Location" to campsite.locationName,
                     "Campsite ID" to campsite.id,
                     "Owner" to controller.ownerName(campsite),
-                    "Status" to if (controller.isRemoved(campsite.id)) "Removed" else "Active",
                 ),
             ),
-            DetailSection("Activity", controller.campsiteActivity(campsite)),
+            DetailSection("Activity", activity),
         ),
         secondaryText = "View reviews & ratings",
         onSecondary = onViewReviews,
@@ -131,7 +141,6 @@ fun AdminImageDetailScreen(
                     "Image ID" to image.id,
                     "Uploaded by" to image.uploaderName,
                     "Type" to image.type.label,
-                    "Uploaded" to image.uploaded,
                 ),
             ),
         ),
@@ -141,7 +150,7 @@ fun AdminImageDetailScreen(
         confirmTitle = "Remove image?",
         confirmMessage = "This image will be permanently removed from the app.",
         onRemove = {
-            controller.removeImage(image.id)
+            controller.removeImage(image)
             onBack()
         },
     ) {

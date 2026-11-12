@@ -1,15 +1,24 @@
 package com.example.lottcamp.controller
 
 import com.example.lottcamp.domain.UserRole
+import com.example.lottcamp.repository.SampleAdminRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 
 /** Unit tests for [AdminHomeController]'s counts and navigation. */
 class AdminHomeControllerTest {
 
-    private val admin = AdminController()
+    private val admin = AdminController(SampleAdminRepository(), CoroutineScope(Dispatchers.Unconfined))
     private val routes = mutableListOf<String>()
     private val controller = AdminHomeController(admin) { routes.add(it) }
+
+    @Before
+    fun setUp() {
+        admin.refresh()
+    }
 
     @Test
     fun counts_reflectAdminData() {

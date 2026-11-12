@@ -22,7 +22,7 @@ object AdminRoutes {
     /** Route to the reviews of the campsite with [id]. */
     fun reviews(id: String) = REVIEWS.replace("{id}", id)
 
-    /** Route to the notification logs, with the search bar pre-filled with [query], e.g. a user ID. */
+    /** Route to the notification logs, with the search bar pre-filled with [query] */
     fun notifications(query: String = "") = NOTIFICATIONS.replace("{query}", query)
 
     /** Route to the details of the image with [id]. */

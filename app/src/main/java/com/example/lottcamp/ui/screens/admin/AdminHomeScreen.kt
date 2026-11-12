@@ -42,7 +42,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.lottcamp.controller.AdminController
 import com.example.lottcamp.controller.AdminHomeController
+import com.example.lottcamp.repository.SampleAdminRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.ui.components.AppChip
 import com.example.lottcamp.ui.components.AppChipVariant
@@ -62,7 +66,7 @@ import com.example.lottcamp.ui.theme.LottCampTheme
 @Composable
 fun AdminHomeScreen(
     modifier: Modifier = Modifier,
-    controller: AdminHomeController = remember { AdminHomeController() },
+    controller: AdminHomeController,
 ) {
     var query by remember { mutableStateOf("") }
 
@@ -268,6 +272,13 @@ private fun LinkText(
 @Composable
 fun AdminHomeScreenPreview() {
     LottCampTheme {
-        AdminHomeScreen()
+        // remember: build the sample controller once, not on every redraw.
+        // Dispatchers.Unconfined loads the sample data straight away, so the preview isn't empty.
+        val controller = remember {
+            val admin = AdminController(SampleAdminRepository(), CoroutineScope(Dispatchers.Unconfined))
+            admin.refresh()
+            AdminHomeController(admin)
+        }
+        AdminHomeScreen(controller = controller)
     }
 }

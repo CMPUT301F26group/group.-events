@@ -1,18 +1,55 @@
 package com.example.lottcamp.controller
 
 import com.example.lottcamp.domain.ImageType
+import com.example.lottcamp.domain.UserProfile
 import com.example.lottcamp.domain.UserRole
+import com.example.lottcamp.repository.SampleAdminRepository
 import com.example.lottcamp.ui.components.initials
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
-/** Unit tests for the searching, filtering and removal logic in [AdminController]. */
+/**
+ * Unit tests for the loading, searching, filtering and removal logic in [AdminController].
+ * Uses [SampleAdminRepository] so no database is touched.
+ */
 class AdminControllerTest {
 
-    private val controller = AdminController()
+    private val data = SampleAdminRepository()
+    private val controller = AdminController(data, CoroutineScope(Dispatchers.Unconfined))
+    private class OfflineRepository : SampleAdminRepository() {
+        override suspend fun getUsers(): List<UserProfile> = throw IllegalStateException("offline")
+    }
+
+    @Before
+    fun setUp() {
+        controller.refresh()
+    }
+
+    @Test
+    fun refresh_loadsEverythingFromTheRepository() {
+        assertEquals(6, controller.users.size)
+        assertEquals(3, controller.campsites.size)
+        assertEquals(3, controller.reviews.size)
+        assertEquals(3, controller.notifications.size)
+        assertEquals(3, controller.messages.size)
+    }
+
+    @Test
+    fun refresh_failure_setsErrorAndClearErrorHidesIt() {
+        val failed = AdminController(OfflineRepository(), CoroutineScope(Dispatchers.Unconfined))
+        failed.refresh()
+        assertEquals("Couldn't load data: offline", failed.error)
+        assertTrue(failed.users.isEmpty())
+        failed.clearError()
+        assertNull(failed.error)
+    }
 
     @Test
     fun searchUsers_matchesNameEmailAndIdIgnoringCase() {
@@ -31,27 +68,24 @@ class AdminControllerTest {
     }
 
     @Test
-    fun removeUser_removesProfile() {
-        controller.removeUser("USR-1042")
+    fun removeUser_removesProfileFromListAndRepository() {
+        controller.removeUser(controller.user("USR-1042")!!)
         assertNull(controller.user("USR-1042"))
+        assertTrue(data.users.none { it.id == "USR-1042" })
     }
 
     @Test
     fun removeOwner_alsoRemovesTheirCampsites() {
-        controller.removeUser("USR-0871")
-        assertTrue(controller.isRemoved("CAMP-001"))
-        assertTrue(controller.isRemoved("CAMP-002"))
-        assertFalse(controller.isRemoved("CAMP-003"))
-        assertEquals("Unknown", controller.ownerName(controller.campsite("CAMP-001")!!))
+        controller.removeUser(controller.user("USR-0871")!!)
+        assertEquals(listOf("CAMP-003"), controller.campsites.map { it.id })
+        assertEquals("Robin Lee", controller.ownerName(controller.campsite("CAMP-003")!!))
     }
 
     @Test
-    fun removeCampsite_movesItFromActiveToRemovedFilter() {
+    fun removeCampsite_removesFromListAndRepository() {
         controller.removeCampsite("CAMP-003")
-        controller.removeCampsite("CAMP-003")
-        assertEquals(listOf("CAMP-003"), controller.searchCampsites("", removed = true).map { it.id })
-        assertEquals(2, controller.searchCampsites("", removed = false).size)
-        assertEquals(3, controller.searchCampsites("").size)
+        assertNull(controller.campsite("CAMP-003"))
+        assertEquals(2, data.campsites.size)
     }
 
     @Test
@@ -62,19 +96,30 @@ class AdminControllerTest {
     @Test
     fun reviews_removeAndAverage() {
         assertEquals(10.0 / 3, controller.averageRating("CAMP-001"), 0.001)
-        controller.removeReview("REV-3")
+        controller.removeReview(controller.reviews.first { it.id == "REV-3" })
         assertEquals(2, controller.reviewsFor("CAMP-001").size)
         assertEquals(4.5, controller.averageRating("CAMP-001"), 0.001)
         assertEquals(0.0, controller.averageRating("CAMP-002"), 0.001)
     }
 
     @Test
-    fun images_filterAndRemove() {
+    fun images_comeFromCampsiteAndProfilePhotos() {
+        assertEquals(2, controller.searchImages("", ImageType.CAMPSITE).size)
         assertEquals(2, controller.searchImages("", ImageType.PROFILE).size)
         assertEquals(2, controller.searchImages("jamie").size)
-        controller.removeImage("IMG-012")
-        assertNull(controller.image("IMG-012"))
-        assertEquals(1, controller.searchImages("", ImageType.CAMPSITE).size)
+        assertEquals("Jamie Chen", controller.image("campsite-CAMP-001")!!.uploaderName)
+    }
+
+    @Test
+    fun removeImage_clearsThePhotoItCameFrom() {
+        controller.removeImage(controller.image("campsite-CAMP-001")!!)
+        assertNull(controller.image("campsite-CAMP-001"))
+        assertNull(controller.campsite("CAMP-001")!!.imageUrl)
+        assertNotNull(controller.campsite("CAMP-001"))
+
+        controller.removeImage(controller.image("profile-USR-1042")!!)
+        assertNull(controller.user("USR-1042")!!.photoUrl)
+        assertEquals(1, controller.searchImages("", ImageType.PROFILE).size)
     }
 
     @Test
@@ -98,11 +143,13 @@ class AdminControllerTest {
     }
 
     @Test
-    fun userActivity_ownerCountsTheirCampsites() {
-        val owner = controller.user("USR-0871")!!
-        assertEquals("Campsites" to "2", controller.userActivity(owner).first())
-        val entrant = controller.user("USR-1042")!!
-        assertEquals("Active reservations", controller.userActivity(entrant).first().first)
+    fun activity_isLabelledByRole() = runBlocking {
+        val owner = controller.userActivity(controller.user("USR-0871")!!)
+        assertEquals(listOf("Campsites" to "2", "Active lotteries" to "2", "Active reservations" to "4"), owner)
+        val entrant = controller.userActivity(controller.user("USR-1042")!!)
+        assertEquals(listOf("Active reservations" to "2", "Past reservations" to "5", "Lottery waiting lists" to "3"), entrant)
+        val campsite = controller.campsiteActivity(controller.campsite("CAMP-001")!!)
+        assertEquals(listOf("Active reservations" to "2", "Active lotteries" to "1"), campsite)
     }
 
     @Test

@@ -15,7 +15,7 @@ import com.example.lottcamp.domain.UserRole
  * @param navigate Called with an [AdminRoutes] route when the screen should change.
  */
 class AdminHomeController(
-    private val admin: AdminController = AdminController(),
+    private val admin: AdminController,
     private val navigate: (String) -> Unit = {},
 ) {
 
@@ -25,10 +25,10 @@ class AdminHomeController(
 
     val userCount get() = admin.users.size
     val imageCount get() = admin.images.size
-    val campsiteCount get() = admin.searchCampsites("", removed = false).size
+    val campsiteCount get() = admin.campsites.size
 
-    /** The newest campsites that have not been removed. */
-    val latestCampsites: List<Campsite> get() = admin.searchCampsites("", removed = false).take(2)
+    /** The first few campsites, shown under "Latest listings". */
+    val latestCampsites: List<Campsite> get() = admin.campsites.take(2)
 
     // TODO: hook up once the global search is designed.
     fun onSearch(query: String) {}
