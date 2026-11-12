@@ -1,5 +1,7 @@
 package com.example.lottcamp.repository
 
+import com.example.lottcamp.data.CampsiteOwnerDoc
+import com.example.lottcamp.data.EntrantDoc
 import com.example.lottcamp.data.MessageDoc
 import com.example.lottcamp.data.NotificationDoc
 import com.example.lottcamp.data.ReviewDoc
@@ -38,6 +40,7 @@ open class AdminRepository(
     private val db by lazy(dbProvider)
     private val admins by lazy { db.collection("admins") }
     private val entrants by lazy { db.collection("entrants") }
+    private val owners by lazy { db.collection("campsite_owners") }
     private val campsites by lazy { db.collection("campsites") }
     private val lotteries by lazy { db.collection("lotteries") }
     private val lotteryEntries by lazy { db.collection("lottery_entries") }
@@ -45,6 +48,7 @@ open class AdminRepository(
     private val reviews by lazy { db.collection("reviews") }
     private val notifications by lazy { db.collection("notifications") }
     private val messages by lazy { db.collection("messages") }
+    private val campsiteRepo by lazy { CampsiteRepository(db) }
 
     open suspend fun isAdmin(id: String): Boolean {
         val snapshot = admins.document(id).get().await()
@@ -56,15 +60,22 @@ open class AdminRepository(
         admins.document(doc.id).set(doc).await()
     }
 
-    /** Every user. Only admins are loaded for now, shown with their ID as the name. */
+    /** Every owner and entrant. Entrants whose ID is in `admins` are admins. */
     open suspend fun getUsers(): List<UserProfile> {
-        return admins.get().await().documents.map {
-            UserProfile(it.id, it.id, "", "", UserRole.ADMIN)
+        val adminIds = admins.get().await().documents.map { it.id }
+        val ownerUsers = owners.get().await().toObjects(CampsiteOwnerDoc::class.java).map {
+            UserProfile(it.androidId, it.name, it.email, it.phoneNumber, UserRole.OWNER)
         }
+        val entrantUsers = entrants.get().await().toObjects(EntrantDoc::class.java).map {
+            val role = if (it.androidId in adminIds) UserRole.ADMIN else UserRole.ENTRANT
+            UserProfile(it.androidId, it.name, it.email, it.phoneNumber, role, it.profilePictureUrl)
+        }
+        // Someone who is both an owner and an entrant is listed once, as an owner
+        return (ownerUsers + entrantUsers).distinctBy { it.id }
     }
 
-    /** Every campsite. Not loaded yet. */
-    open suspend fun getCampsites(): List<Campsite> = emptyList()
+    /** Every campsite. */
+    open suspend fun getCampsites(): List<Campsite> = campsiteRepo.getAllCampsites()
 
     /** Every campsite review. */
     open suspend fun getReviews(): List<Review> {
@@ -105,7 +116,7 @@ open class AdminRepository(
 
     /** Activity counts for the campsite owner with [ownerId]. */
     open suspend fun getOwnerActivity(ownerId: String): OwnerActivity {
-        val campsiteIds = campsites.whereEqualTo("ownersAndroidId", ownerId).get().await().documents.map { it.id }
+        val campsiteIds = campsiteRepo.getCampsitesByOwner(ownerId).map { it.id }
         val ownerLotteries = lotteries.whereEqualTo("ownerId", ownerId).get().await().documents
         val activeLotteries = ownerLotteries.count { isActive(it) }
 
@@ -122,14 +133,21 @@ open class AdminRepository(
         return CampsiteActivity(countActiveReservations(campsiteId), campsiteLotteries.count { isActive(it) })
     }
 
-    /** Deletes [user]'s profile. */
+    /** Deletes [user]'s profile. Deleting an owner also deletes their campsites. */
     open suspend fun removeUser(user: UserProfile) {
-        admins.document(user.id).delete().await()
+        if (user.role == UserRole.OWNER) {
+            for (campsite in campsiteRepo.getCampsitesByOwner(user.id)) {
+                campsiteRepo.deleteCampsite(campsite.id)
+            }
+            owners.document(user.id).delete().await()
+        } else {
+            entrants.document(user.id).delete().await()
+        }
     }
 
     /** Deletes the campsite with [campsiteId]. */
     open suspend fun removeCampsite(campsiteId: String) {
-        campsites.document(campsiteId).delete().await()
+        campsiteRepo.deleteCampsite(campsiteId)
     }
 
     /** Deletes [review] and takes its rating out of the campsite's average. */
