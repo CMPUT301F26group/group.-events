@@ -50,7 +50,8 @@ class RepositoryTest {
             "Campsite 1",
             "Edmonton, AB",
             pricePerNight = 1000.0,
-            maxOccupancy = 3
+            maxOccupancy = 3,
+            tags = listOf("Has cats", "Fire pit", "Hot tub", "Tables")
         )
         val campsite2 = Campsite(
             "campsite2",
@@ -59,7 +60,7 @@ class RepositoryTest {
             "St. Paul, AB",
             pricePerNight = 0.000005,
             maxOccupancy = 100000,
-            tags = listOf("Terrifying", "Bone chilling", "Sunny")
+            tags = listOf("Terrifying", "Bone chilling", "Bleak")
         )
         val lottery = Lottery(
             "lottery1",
@@ -105,21 +106,21 @@ class RepositoryTest {
             lottery_entry_repo.saveEntry(lotteryEntry2)
         }
 
-        @JvmStatic
-        @AfterClass
-        /**
-         * Populate the database with test data
-         * */
-        fun deleteTestData(): Unit = runBlocking {
-            entrant_repo.deleteEntrant(entrant1.androidId)
-            entrant_repo.deleteEntrant(entrant2.androidId)
-            campsite_owner_repo.deleteOwner(owner1.id)
-            campsite_repo.deleteCampsite(campsite1.id)
-            campsite_repo.deleteCampsite(campsite2.id)
-            lottery_repo.deleteLottery(lottery.id)
-            lottery_entry_repo.deleteEntry(lotteryEntry1.id)
-            lottery_entry_repo.deleteEntry(lotteryEntry2.id)
-        }
+//        @JvmStatic
+//        @AfterClass
+//        /**
+//         * Populate the database with test data
+//         * */
+//        fun deleteTestData(): Unit = runBlocking {
+//            entrant_repo.deleteEntrant(entrant1.androidId)
+//            entrant_repo.deleteEntrant(entrant2.androidId)
+//            campsite_owner_repo.deleteOwner(owner1.id)
+//            campsite_repo.deleteCampsite(campsite1.id)
+//            campsite_repo.deleteCampsite(campsite2.id)
+//            lottery_repo.deleteLottery(lottery.id)
+//            lottery_entry_repo.deleteEntry(lotteryEntry1.id)
+//            lottery_entry_repo.deleteEntry(lotteryEntry2.id)
+//        }
     }
 
     // --- EntrantRepository Tests ---
