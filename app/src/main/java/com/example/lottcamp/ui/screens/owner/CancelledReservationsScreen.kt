@@ -1,19 +1,19 @@
-package com.example.lottcamp
+package com.example.lottcamp.ui.screens.owner
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.lottcamp.ui.theme.LottCampTheme
 
 @Composable
-fun ActiveReservationsScreen() {
+fun CancelledReservationsScreen() {
 
 }
 
 
 @Preview(showBackground = true)
 @Composable
-fun ActiveReservationsScreenPreview() {
+fun CancelledReservationsScreenPreview() {
     LottCampTheme {
-        ActiveReservationsScreen()
+        CancelledReservationsScreen()
     }
 }

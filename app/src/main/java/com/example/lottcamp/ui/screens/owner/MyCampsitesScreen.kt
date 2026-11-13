@@ -1,4 +1,4 @@
-package com.example.lottcamp
+package com.example.lottcamp.ui.screens.owner
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

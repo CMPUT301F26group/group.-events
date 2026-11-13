@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -55,7 +54,7 @@ fun AppSearchBar(
     val borderColor = if (focused) {
         MaterialTheme.colorScheme.primary
     } else {
-        MaterialTheme.colorScheme.outline
+        MaterialTheme.colorScheme.secondary
     }
 
     BasicTextField(
@@ -64,7 +63,7 @@ fun AppSearchBar(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                color = MaterialTheme.colorScheme.surface,
+                color = MaterialTheme.colorScheme.secondary,
                 shape = MaterialTheme.shapes.medium,
             )
             .border(
@@ -108,14 +107,12 @@ fun AppSearchBar(
                         contentDescription = "Clear search",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
-                            .minimumInteractiveComponentSize()
                             .clip(CircleShape)
                             .clickable(
                                 onClick = onClear,
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
-                            )
-                            .padding(2.dp),
+                            ),
                     )
                 }
             }

@@ -1,4 +1,4 @@
-package com.example.lottcamp
+package com.example.lottcamp.ui.screens.entrant
 
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
