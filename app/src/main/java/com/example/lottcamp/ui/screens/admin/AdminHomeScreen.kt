@@ -272,8 +272,6 @@ private fun LinkText(
 @Composable
 fun AdminHomeScreenPreview() {
     LottCampTheme {
-        // remember: build the sample controller once, not on every redraw.
-        // Dispatchers.Unconfined loads the sample data straight away, so the preview isn't empty.
         val controller = remember {
             val admin = AdminController(SampleAdminRepository(), CoroutineScope(Dispatchers.Unconfined))
             admin.refresh()
