@@ -53,7 +53,7 @@ fun EntrantDoc.toDomain(): Entrant = Entrant(
     name = name,
     phoneNumber = phoneNumber,
     email = email,
-    profilePictureUrl = profilePictureUrl,
+    profilePictureId = profilePictureUrl,
     notificationsEnabled = isNotificationsEnabled
 )
 
@@ -62,7 +62,7 @@ fun Entrant.toDoc(): EntrantDoc = EntrantDoc(
     name = name,
     phoneNumber = phoneNumber,
     email = email,
-    profilePictureUrl = profilePictureUrl,
+    profilePictureUrl = profilePictureId,
     isNotificationsEnabled = notificationsEnabled
 )
 
@@ -77,7 +77,7 @@ fun CampsiteDoc.toDomain(): Campsite = Campsite(
     description = description,
     maxOccupancy = maxOccupancy,
     pricePerNight = pricePerNight,
-    imageUrl = imageUrl,
+    imageId = imageUrl,
     tags = tags,
     ratingSum = ratingSum,
     ratingCount = ratingCount,
@@ -94,7 +94,7 @@ fun Campsite.toDoc(): CampsiteDoc = CampsiteDoc(
     description = description,
     maxOccupancy = maxOccupancy,
     pricePerNight = pricePerNight,
-    imageUrl = imageUrl,
+    imageUrl = imageId,
     tags = tags,
     ratingSum = ratingSum,
     ratingCount = ratingCount,

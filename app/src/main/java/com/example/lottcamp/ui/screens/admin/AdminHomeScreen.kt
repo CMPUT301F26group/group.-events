@@ -55,6 +55,7 @@ import com.example.lottcamp.ui.components.AppImagePlaceholder
 import com.example.lottcamp.ui.components.AppListRow
 import com.example.lottcamp.ui.components.AppSearchBar
 import com.example.lottcamp.ui.components.AppSectionTitle
+import com.example.lottcamp.ui.components.AppStoredImage
 import com.example.lottcamp.ui.theme.LottCampTheme
 
 /**
@@ -127,7 +128,15 @@ fun AdminHomeScreen(
             controller.latestCampsites.forEachIndexed { index, campsite ->
                 if (index > 0) AppDivider(spacing = 12.dp)
                 AppListRow(campsite.name, campsite.locationName, { controller.onCampsiteClick(campsite) }) {
-                    AppImagePlaceholder()
+                    Box {
+                        AppImagePlaceholder()
+                        AppStoredImage(
+                            imageId = campsite.imageId,
+                            imageRepo = controller.imageRepo,
+                            contentDescription = campsite.name,
+                            modifier = Modifier.matchParentSize().clip(MaterialTheme.shapes.medium),
+                        )
+                    }
                 }
             }
         }
