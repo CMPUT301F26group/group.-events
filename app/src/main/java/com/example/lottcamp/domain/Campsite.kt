@@ -13,7 +13,7 @@ data class Campsite(
     val description: String = "",
     val maxOccupancy: Int,
     val pricePerNight: Double,
-    val imageId: String? = null,
+    var imageId: String? = null,
     val tags: List<String> = emptyList(),
     val ratingSum: Double = 0.0,
     val ratingCount: Int = 0,
