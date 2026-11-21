@@ -3,6 +3,7 @@ package com.example.lottcamp.ui.screens.admin
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +23,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.example.lottcamp.controller.AdminController
 import com.example.lottcamp.domain.Campsite
@@ -34,6 +36,7 @@ import com.example.lottcamp.ui.components.AppImagePlaceholder
 import com.example.lottcamp.ui.components.AppListRow
 import com.example.lottcamp.ui.components.AppMutedText
 import com.example.lottcamp.ui.components.AppRatingBar
+import com.example.lottcamp.ui.components.AppStoredImage
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -98,7 +101,15 @@ fun AdminCampsitesScreen(controller: AdminController, onBack: () -> Unit, onCamp
     ) {
         items(campsites, key = { it.id }) { campsite ->
             AppListRow(campsite.name, "${campsite.locationName} · ${campsite.id}", { onCampsiteClick(campsite) }) {
-                AppImagePlaceholder()
+                Box {
+                    AppImagePlaceholder()
+                    AppStoredImage(
+                        imageId = campsite.imageId,
+                        imageRepo = controller.imageRepo,
+                        contentDescription = campsite.name,
+                        modifier = Modifier.matchParentSize().clip(MaterialTheme.shapes.medium),
+                    )
+                }
             }
         }
     }
@@ -134,7 +145,15 @@ fun AdminImagesScreen(controller: AdminController, onBack: () -> Unit, onImageCl
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 row.forEach { image ->
                     Column(Modifier.weight(1f).clickable { onImageClick(image) }) {
-                        AppImagePlaceholder(Modifier.fillMaxWidth().aspectRatio(1f))
+                        Box {
+                            AppImagePlaceholder(Modifier.fillMaxWidth().aspectRatio(1f))
+                            AppStoredImage(
+                                imageId = image.imageId,
+                                imageRepo = controller.imageRepo,
+                                contentDescription = image.title,
+                                modifier = Modifier.matchParentSize().clip(MaterialTheme.shapes.medium),
+                            )
+                        }
                         Text(image.title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 4.dp))
                         AppMutedText("${image.uploaderName} · ${image.type.label}")
                     }

@@ -66,7 +66,7 @@ enum class ImageType(val label: String) {
  * @property uploaderId ID of the user who uploaded the image
  * @property uploaderName Name of the user who uploaded the image
  * @property type Whether this is a campsite or profile image
- * @property ImageId Location of the image file
+ * @property imageId Location of the image file
  */
 data class UploadedImage(
     val id: String,
@@ -75,7 +75,7 @@ data class UploadedImage(
     val uploaderId: String,
     val uploaderName: String,
     val type: ImageType,
-    val ImageId: String? = null,
+    val imageId: String? = null,
 )
 
 /**

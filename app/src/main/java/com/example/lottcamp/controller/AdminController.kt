@@ -13,6 +13,7 @@ import com.example.lottcamp.domain.UploadedImage
 import com.example.lottcamp.domain.UserProfile
 import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.repository.AdminRepository
+import com.example.lottcamp.repository.ImageRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -26,7 +27,7 @@ import kotlinx.coroutines.launch
  * @param data Where the data is read from and removed.
  * @param scope Runs database work in the background so the screen doesn't freeze.
  */
-class AdminController(private val data: AdminRepository, private val scope: CoroutineScope) {
+class AdminController(private val data: AdminRepository, private val scope: CoroutineScope, val imageRepo: ImageRepository = ImageRepository()) {
 
     /** Every user account. */
     val users = mutableStateListOf<UserProfile>()
