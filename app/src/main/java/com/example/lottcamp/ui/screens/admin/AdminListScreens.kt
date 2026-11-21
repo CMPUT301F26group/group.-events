@@ -69,7 +69,7 @@ fun AdminUsersScreen(controller: AdminController, onBack: () -> Unit, onUserClic
     ) {
         items(users, key = { it.id }) { user ->
             AppListRow(user.name, user.email, { onUserClick(user) }, trailing = user.role.label) {
-                AppAvatar(user.name, imageUrl = user.photoUrl)
+                AppAvatar(user.name, imageUrl = user.photoId)
             }
         }
     }

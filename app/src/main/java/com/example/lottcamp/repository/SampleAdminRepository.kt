@@ -27,8 +27,8 @@ open class SampleAdminRepository : AdminRepository() {
     )
 
     val campsites = mutableListOf(
-        Campsite("CAMP-001", "USR-0871", "Pine Ridge Camp", "Hinton, AB", maxOccupancy = 6, pricePerNight = 85.0, imageUrl = "https://photo.invalid/pine.png"),
-        Campsite("CAMP-002", "USR-0871", "Bow Valley Retreat", "Canmore, AB", maxOccupancy = 4, pricePerNight = 120.0, imageUrl = "https://photo.invalid/bow.png"),
+        Campsite("CAMP-001", "USR-0871", "Pine Ridge Camp", "Hinton, AB", maxOccupancy = 6, pricePerNight = 85.0, imageId = "https://photo.invalid/pine.png"),
+        Campsite("CAMP-002", "USR-0871", "Bow Valley Retreat", "Canmore, AB", maxOccupancy = 4, pricePerNight = 120.0, imageId = "https://photo.invalid/bow.png"),
         Campsite("CAMP-003", "USR-0932", "Meadow Ridge", "Banff, AB", maxOccupancy = 8, pricePerNight = 95.0),
     )
 
@@ -102,8 +102,8 @@ open class SampleAdminRepository : AdminRepository() {
 
     override suspend fun removeImage(image: UploadedImage) {
         when (image.type) {
-            ImageType.CAMPSITE -> campsites.replaceAll { if (it.id == image.sourceId) it.copy(imageUrl = null) else it }
-            ImageType.PROFILE -> users.replaceAll { if (it.id == image.sourceId) it.copy(photoUrl = null) else it }
+            ImageType.CAMPSITE -> campsites.replaceAll { if (it.id == image.sourceId) it.copy(imageId = null) else it }
+            ImageType.PROFILE -> users.replaceAll { if (it.id == image.sourceId) it.copy(photoId = null) else it }
         }
     }
 }

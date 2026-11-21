@@ -62,7 +62,7 @@ fun AdminUserDetailScreen(
             onBack()
         },
     ) {
-        AppListRow(user.name, "${user.role.label} · ${user.id}") { AppAvatar(user.name, 56.dp, user.photoUrl) }
+        AppListRow(user.name, "${user.role.label} · ${user.id}") { AppAvatar(user.name, 56.dp, user.photoId) }
     }
 }
 

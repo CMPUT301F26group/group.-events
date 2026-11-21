@@ -19,7 +19,7 @@ enum class UserRole(val label: String) {
  * @property email Contact email.
  * @property phone Contact phone number.
  * @property role Role the account holds.
- * @property photoUrl Location of the profile photo, or null if the user has none.
+ * @property photoId Location of the profile photo, or null if the user has none.
  */
 data class UserProfile(
     val id: String,
@@ -27,7 +27,7 @@ data class UserProfile(
     val email: String,
     val phone: String,
     val role: UserRole,
-    val photoUrl: String? = null,
+    val photoId: String? = null,
 )
 
 /**
@@ -66,7 +66,7 @@ enum class ImageType(val label: String) {
  * @property uploaderId ID of the user who uploaded the image
  * @property uploaderName Name of the user who uploaded the image
  * @property type Whether this is a campsite or profile image
- * @property url Location of the image file
+ * @property ImageId Location of the image file
  */
 data class UploadedImage(
     val id: String,
@@ -75,7 +75,7 @@ data class UploadedImage(
     val uploaderId: String,
     val uploaderName: String,
     val type: ImageType,
-    val url: String? = null,
+    val ImageId: String? = null,
 )
 
 /**
