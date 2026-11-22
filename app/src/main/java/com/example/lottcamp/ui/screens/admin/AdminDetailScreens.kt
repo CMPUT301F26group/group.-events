@@ -1,7 +1,9 @@
 package com.example.lottcamp.ui.screens.admin
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -11,12 +13,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.example.lottcamp.controller.AdminController
 import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.ui.components.AppAvatar
 import com.example.lottcamp.ui.components.AppImagePlaceholder
 import com.example.lottcamp.ui.components.AppListRow
+import com.example.lottcamp.ui.components.AppStoredImage
 
 /**
  * Details of a user profile, with an option to remove it.
@@ -62,7 +66,17 @@ fun AdminUserDetailScreen(
             onBack()
         },
     ) {
-        AppListRow(user.name, "${user.role.label} · ${user.id}") { AppAvatar(user.name, 56.dp, user.photoUrl) }
+        AppListRow(user.name, "${user.role.label} · ${user.id}") {
+            Box {
+                AppAvatar(user.name, 56.dp)
+                AppStoredImage(
+                    imageId = user.photoId,
+                    imageRepo = controller.imageRepo,
+                    contentDescription = null,
+                    modifier = Modifier.matchParentSize().clip(CircleShape),
+                )
+            }
+        }
     }
 }
 
@@ -110,7 +124,17 @@ fun AdminCampsiteDetailScreen(
             onBack()
         },
     ) {
-        AppListRow(campsite.name, campsite.locationName) { AppImagePlaceholder() }
+        AppListRow(campsite.name, campsite.locationName) {
+            Box {
+                AppImagePlaceholder()
+                AppStoredImage(
+                    imageId = campsite.imageId,
+                    imageRepo = controller.imageRepo,
+                    contentDescription = campsite.name,
+                    modifier = Modifier.matchParentSize().clip(MaterialTheme.shapes.medium),
+                )
+            }
+        }
     }
 }
 
@@ -154,7 +178,15 @@ fun AdminImageDetailScreen(
             onBack()
         },
     ) {
-        AppImagePlaceholder(Modifier.fillMaxWidth().height(200.dp))
+        Box {
+            AppImagePlaceholder(Modifier.fillMaxWidth().height(200.dp))
+            AppStoredImage(
+                imageId = image.imageId,
+                imageRepo = controller.imageRepo,
+                contentDescription = image.title,
+                modifier = Modifier.matchParentSize().clip(MaterialTheme.shapes.medium),
+            )
+        }
         Text(image.title, style = MaterialTheme.typography.titleMedium)
     }
 }

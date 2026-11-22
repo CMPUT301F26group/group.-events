@@ -13,6 +13,7 @@ import com.example.lottcamp.domain.UploadedImage
 import com.example.lottcamp.domain.UserProfile
 import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.repository.AdminRepository
+import com.example.lottcamp.repository.ImageRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -26,7 +27,7 @@ import kotlinx.coroutines.launch
  * @param data Where the data is read from and removed.
  * @param scope Runs database work in the background so the screen doesn't freeze.
  */
-class AdminController(private val data: AdminRepository, private val scope: CoroutineScope) {
+class AdminController(private val data: AdminRepository, private val scope: CoroutineScope, val imageRepo: ImageRepository = ImageRepository()) {
 
     /** Every user account. */
     val users = mutableStateListOf<UserProfile>()
@@ -52,21 +53,21 @@ class AdminController(private val data: AdminRepository, private val scope: Coro
         get() {
             val result = mutableListOf<UploadedImage>()
             for (campsite in campsites) {
-                if (campsite.imageUrl != null) {
+                if (campsite.imageId != null) {
                     result.add(
                         UploadedImage(
                             "campsite-${campsite.id}", campsite.id, campsite.name, campsite.ownerId,
-                            ownerName(campsite), ImageType.CAMPSITE, campsite.imageUrl,
+                            ownerName(campsite), ImageType.CAMPSITE, campsite.imageId,
                         ),
                     )
                 }
             }
             for (user in users) {
-                if (user.photoUrl != null) {
+                if (user.photoId != null) {
                     result.add(
                         UploadedImage(
                             "profile-${user.id}", user.id, "Profile photo", user.id,
-                            user.name, ImageType.PROFILE, user.photoUrl,
+                            user.name, ImageType.PROFILE, user.photoId,
                         ),
                     )
                 }
@@ -219,10 +220,10 @@ class AdminController(private val data: AdminRepository, private val scope: Coro
             // Replace the campsite or user with a copy that has no photo
             if (image.type == ImageType.CAMPSITE) {
                 val index = campsites.indexOfFirst { it.id == image.sourceId }
-                if (index != -1) campsites[index] = campsites[index].copy(imageUrl = null)
+                if (index != -1) campsites[index] = campsites[index].copy(imageId = null)
             } else {
                 val index = users.indexOfFirst { it.id == image.sourceId }
-                if (index != -1) users[index] = users[index].copy(photoUrl = null)
+                if (index != -1) users[index] = users[index].copy(photoId = null)
             }
         }
     }

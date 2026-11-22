@@ -8,7 +8,7 @@ data class Entrant(
     val name: String,
     val phoneNumber: String,
     val email: String,
-    val profilePictureUrl: String? = null,
+    val profilePictureId: String? = null,
     val notificationsEnabled: Boolean = true
 ) {
     /** Checks if the entrant has completed their required profile details. */
