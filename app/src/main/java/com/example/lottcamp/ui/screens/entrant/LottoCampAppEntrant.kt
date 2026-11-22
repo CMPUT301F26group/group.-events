@@ -23,13 +23,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.lottcamp.repository.EntrantRepository
 import com.example.lottcamp.ui.components.AppNavBar
 import com.example.lottcamp.ui.components.AppNavItem
 import com.example.lottcamp.ui.theme.LottCampTheme
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun LottoCampAppEntrant() {
+fun LottoCampAppEntrant(data: EntrantRepository = EntrantRepository()) {
     val navController = rememberNavController()
     val searchViewModel: SearchViewModel = viewModel()
 
@@ -81,7 +82,7 @@ fun LottoCampAppEntrant() {
         ) { innerPadding ->
             NavHost(navController = navController, startDestination = "entrant-campsite-search-screen") {
                 composable("entrant-campsite-search-screen") { EntrantCampsiteSearchScreen(navController, Modifier.padding(innerPadding), searchViewModel) }
-                composable("entrant-bookings-screen") { EntrantBookingsScreen(navController, Modifier.padding(innerPadding)) }
+                composable("entrant-bookings-screen") { EntrantBookingsScreen(navController, Modifier.padding(innerPadding), data) }
                 composable("entrant-messages-screen") { EntrantMessagesScreen(navController, Modifier.padding(innerPadding)) }
                 composable("entrant-profile-screen") { EntrantProfileScreen(navController, Modifier.padding(innerPadding)) }
                 composable(
@@ -94,6 +95,32 @@ fun LottoCampAppEntrant() {
                     EntrantCampsiteDetailsScreen(navController, Modifier.padding(innerPadding), campsiteId)
                 }
                 composable("entrant-campsite-filter-screen") { EntrantCampsiteFilterScreen(navController, Modifier.padding(innerPadding), searchViewModel) }
+                composable(
+                    "entrant-campsite-rating-screen/{campsiteId}",
+                    arguments = listOf(
+                        navArgument("campsiteId") { type = NavType.StringType }
+                    )
+                ) { backStackEntry ->
+                    val campsiteId = backStackEntry.arguments?.getString("campsiteId") ?: ""
+                    EntrantCampsiteRatingScreen(navController, Modifier.padding(innerPadding), campsiteId, data)
+                }
+                composable(
+                    "entrant-rating-submitted-screen/{campsiteId}/{rating}",
+                    arguments = listOf(
+                        navArgument("campsiteId") { type = NavType.StringType },
+                        navArgument("rating") { type = NavType.IntType },
+                    )
+                ) { backStackEntry ->
+                    val campsiteId = backStackEntry.arguments?.getString("campsiteId") ?: ""
+                    val rating = backStackEntry.arguments?.getInt("rating") ?: 0
+                    EntrantRatingSubmittedScreen(
+                        navController,
+                        Modifier.padding(innerPadding),
+                        campsiteId,
+                        rating,
+                        data,
+                    )
+                }
             }
         }
     }

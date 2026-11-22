@@ -24,6 +24,7 @@ import com.example.lottcamp.repository.CampsiteRepository
 import com.example.lottcamp.repository.LotteryRepository
 import com.example.lottcamp.ui.components.AppBackButton
 import com.example.lottcamp.ui.components.AppButton
+import com.example.lottcamp.ui.components.AppButtonVariant
 import com.example.lottcamp.ui.components.AppRatingBar
 
 
@@ -82,6 +83,15 @@ fun EntrantCampsiteDetailsScreen(
                 "Join waiting list",
                 onClick = { /* TODO: join waiting list */ },
                 modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        item {
+            AppButton(
+                "Rate this campsite",
+                onClick = { navController.navigate("entrant-campsite-rating-screen/${cs.id}") },
+                modifier = Modifier.fillMaxWidth(),
+                variant = AppButtonVariant.Secondary,
             )
         }
     }
