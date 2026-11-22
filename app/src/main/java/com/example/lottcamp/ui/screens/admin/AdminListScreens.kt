@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -72,7 +73,15 @@ fun AdminUsersScreen(controller: AdminController, onBack: () -> Unit, onUserClic
     ) {
         items(users, key = { it.id }) { user ->
             AppListRow(user.name, user.email, { onUserClick(user) }, trailing = user.role.label) {
-                AppAvatar(user.name, imageUrl = user.photoId)
+                Box {
+                    AppAvatar(user.name)
+                    AppStoredImage(
+                        imageId = user.photoId,
+                        imageRepo = controller.imageRepo,
+                        contentDescription = null,
+                        modifier = Modifier.matchParentSize().clip(CircleShape),
+                    )
+                }
             }
         }
     }
