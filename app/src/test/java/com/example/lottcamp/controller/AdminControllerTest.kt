@@ -114,11 +114,11 @@ class AdminControllerTest {
     fun removeImage_clearsThePhotoItCameFrom() {
         controller.removeImage(controller.image("campsite-CAMP-001")!!)
         assertNull(controller.image("campsite-CAMP-001"))
-        assertNull(controller.campsite("CAMP-001")!!.imageUrl)
+        assertNull(controller.campsite("CAMP-001")!!.imageId)
         assertNotNull(controller.campsite("CAMP-001"))
 
         controller.removeImage(controller.image("profile-USR-1042")!!)
-        assertNull(controller.user("USR-1042")!!.photoUrl)
+        assertNull(controller.user("USR-1042")!!.photoId)
         assertEquals(1, controller.searchImages("", ImageType.PROFILE).size)
     }
 

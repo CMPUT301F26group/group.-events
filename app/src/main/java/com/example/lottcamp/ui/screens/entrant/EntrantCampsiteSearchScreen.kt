@@ -32,7 +32,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.navigation.NavController
 import com.example.lottcamp.repository.CampsiteRepository
+import com.example.lottcamp.repository.ImageRepository
 import com.example.lottcamp.repository.LotteryRepository
+import com.example.lottcamp.ui.components.AppStoredImage
 
 @Composable
 fun EntrantCampsiteSearchScreen(
@@ -45,6 +47,7 @@ fun EntrantCampsiteSearchScreen(
     var searchResults by remember { mutableStateOf(listOf<Campsite>()) }
     val campsiteRepo = CampsiteRepository()
     val lotteryRepo = LotteryRepository()
+    val imageRepo = ImageRepository()
 
     LaunchedEffect(currentFilter) {
         searchResults = currentFilter.getMatches(campsiteRepo, lotteryRepo)
@@ -161,6 +164,13 @@ fun EntrantCampsiteSearchScreen(
                             priceUnit = "/ Night",
                             onClick = {
                                 navController.navigate("entrant-campsite-details-screen/${campsite.id}")
+                            },
+                            image = {
+                                AppStoredImage(
+                                    campsite.imageId,
+                                    imageRepo,
+                                    contentDescription = null
+                                )
                             }
                         )
                     }
