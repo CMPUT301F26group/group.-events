@@ -45,6 +45,7 @@ fun CampsiteDetailsScreen(
     year: Int,
     month: Int,
     bookedDays: Set<Int>,
+    lotteryText: String,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onDownloadQr: () -> Unit,
@@ -143,7 +144,7 @@ fun CampsiteDetailsScreen(
                     modifier = Modifier.weight(1f),
                 )
                 AppButton(
-                    text = "Create lottery",
+                    text = lotteryText,
                     onClick = onCreateLottery,
                     modifier = Modifier.weight(1f),
                 )
@@ -164,6 +165,7 @@ fun CampsiteDetailsScreenPreview() {
             year = 2027,
             month = 5,
             bookedDays = setOf(8, 9, 22, 23),
+            lotteryText = "Create lottery",
             onPreviousMonth = {},
             onNextMonth = {},
             onDownloadQr = {},

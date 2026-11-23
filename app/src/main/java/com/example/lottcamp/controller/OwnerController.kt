@@ -1,64 +1,85 @@
 package com.example.lottcamp.controller
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.lottcamp.domain.Campsite
+import com.example.lottcamp.domain.Lottery
+import com.example.lottcamp.domain.Reservation
 import com.example.lottcamp.repository.CampsiteRepository
+import com.example.lottcamp.repository.LotteryRepository
+import com.example.lottcamp.repository.ReservationRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import java.time.Instant
 
-/**
- * Controller shared by the owner screens.
- *
- * Loads and saves the campsites owned by [ownerId] through [data].
- * The list is Compose state, so screens update automatically.
- *
- * @param ownerId Android ID of the owner.
- * @param data Where the campsites are read from and saved to.
- * @param scope Runs database work in the background so the screen doesn't freeze.
- */
+@RequiresApi(Build.VERSION_CODES.O)
 class OwnerController(
     private val ownerId: String,
     private val data: CampsiteRepository,
+    private val lotteryData: LotteryRepository,
+    private val reservationData: ReservationRepository,
     private val scope: CoroutineScope,
 ) {
-
-    /** The owner's campsites. */
     val campsites = mutableStateListOf<Campsite>()
+    val lotteries = mutableStateListOf<Lottery>()
+    val reservations = mutableStateListOf<Reservation>()
 
-    /** Message describing the last thing that failed, or null. Cleared with [clearError]. */
+    var saving by mutableStateOf(false)
+        private set
+
     var error by mutableStateOf<String?>(null)
         private set
 
-    /** Reloads the owner's campsites from the database. */
     fun refresh() {
         runInBackground("Couldn't load your campsites") { load() }
     }
+
     fun campsite(id: String) = campsites.find { it.id == id }
 
-    /** Saves [campsite], reloads the list, then calls [onSaved]. If saving fails, shows [error]. */
+    fun latestLottery(): Lottery? = lotteries.maxByOrNull { it.registrationStart }
+
+    fun lotteryFor(campsiteId: String): Lottery? {
+        val now = Instant.now()
+        return lotteries
+            .filter { lottery -> lottery.campsites.any { it.id == campsiteId } && now.isBefore(lottery.bookingEnd) }
+            .maxByOrNull { it.registrationStart }
+    }
+
+    fun status(campsite: Campsite): String =
+        if (lotteryFor(campsite.id)?.isRegistrationOpen() == true) "Lottery open" else "Published"
+
     fun saveCampsite(campsite: Campsite, onSaved: () -> Unit) {
+        if (saving) return
         runInBackground("Couldn't save the campsite") {
-            data.saveCampsite(campsite)
-            load()
-            onSaved()
+            saving = true
+            try {
+                withTimeout(10_000) { data.saveCampsite(campsite) }
+                load()
+                onSaved()
+            } finally {
+                saving = false
+            }
         }
     }
 
-    /** Hides the current [error]. */
-    fun clearError() {
-        error = null
-    }
+    fun report(message: String) { error = message }
+    fun clearError() { error = null }
 
     private suspend fun load() {
         val newCampsites = data.getCampsitesByOwner(ownerId)
-        campsites.clear()
-        campsites.addAll(newCampsites)
+        val newLotteries = lotteryData.getLotteriesByOwner(ownerId)
+        val newReservations = reservationData.getReservationsForCampsites(newCampsites.map { it.id })
+
+        campsites.clear(); campsites.addAll(newCampsites)
+        lotteries.clear(); lotteries.addAll(newLotteries)
+        reservations.clear(); reservations.addAll(newReservations)
     }
 
-    /** Runs [work] in the background. If it fails, shows [errorMessage] through [error]. */
     private fun runInBackground(errorMessage: String, work: suspend () -> Unit) {
         scope.launch {
             try {

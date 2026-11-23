@@ -41,6 +41,7 @@ import com.example.lottcamp.ui.theme.LottCampTheme
 @Composable
 fun MyCampsiteScreen(
     campsites: List<Campsite>,
+    subtitle: (Campsite) -> String,
     role: UserRole,
     availableRoles: List<UserRole>,
     onRoleSelected: (UserRole) -> Unit,
@@ -120,7 +121,7 @@ fun MyCampsiteScreen(
             items(campsites, key = { it.id }) { campsite ->
                 AppListRow(
                     title = campsite.name,
-                    subtitle = campsite.locationName,
+                    subtitle = subtitle(campsite),
                     leading = { AppImagePlaceholder() },
                     onClick = { onCampsiteClick(campsite) },
                 )
@@ -130,39 +131,17 @@ fun MyCampsiteScreen(
     }
 }
 
-
-
 @Preview(showBackground = true)
 @Composable
 fun MyCampsiteScreenPreview() {
     LottCampTheme {
         MyCampsiteScreen(
             campsites = listOf(
-                Campsite(
-                    id = "1",
-                    ownerId = "owner1",
-                    name = "Pine Ridge Camp",
-                    locationName = "Hinton, AB",
-                    maxOccupancy = 6,
-                    pricePerNight = 50.0,
-                ),
-                Campsite(
-                    id = "2",
-                    ownerId = "owner1",
-                    name = "Bow Valley Retreat",
-                    locationName = "Canmore, AB",
-                    maxOccupancy = 6,
-                    pricePerNight = 50.0,
-                ),
-                Campsite(
-                    id = "3",
-                    ownerId = "owner1",
-                    name = "Meadow Ridge",
-                    locationName = "Banff, AB",
-                    maxOccupancy = 6,
-                    pricePerNight = 50.0,
-                ),
+                Campsite("1", "owner1", "Pine Ridge Camp", "Hinton, AB", maxOccupancy = 6, pricePerNight = 50.0),
+                Campsite("2", "owner1", "Bow Valley Retreat", "Canmore, AB", maxOccupancy = 6, pricePerNight = 50.0),
+                Campsite("3", "owner1", "Meadow Ridge", "Banff, AB", maxOccupancy = 6, pricePerNight = 50.0),
             ),
+            subtitle = { "${it.locationName} · Published" },
             role = UserRole.OWNER,
             availableRoles = UserRole.entries,
             onRoleSelected = {},
