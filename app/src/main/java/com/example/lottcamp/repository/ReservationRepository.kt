@@ -43,4 +43,14 @@ class ReservationRepository(
     suspend fun updateReservationStatus(id: String, statusName: String) {
         collection.document(id).update("status", statusName).await()
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun getReservationsForCampsites(campsiteIds: List<String>): List<Reservation> {
+        if (campsiteIds.isEmpty()) return emptyList()
+        // whereIn accepts at most 30 values per query
+        return campsiteIds.chunked(30).flatMap { chunk ->
+            collection.whereIn("campsiteId", chunk).get().await().documents
+                .mapNotNull { it.toObject(ReservationDoc::class.java)?.toDomain() }
+        }
+    }
 }

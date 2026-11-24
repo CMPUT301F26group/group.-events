@@ -1,6 +1,5 @@
 package com.example.lottcamp.repository
 
-import android.system.Os.close
 import com.example.lottcamp.data.EntrantDoc
 import com.example.lottcamp.domain.Entrant
 import com.google.firebase.Firebase
@@ -10,6 +9,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import com.google.firebase.firestore.FieldPath
 
 class EntrantRepository(
     private val db: FirebaseFirestore = Firebase.firestore
@@ -39,5 +39,15 @@ class EntrantRepository(
 
     suspend fun deleteEntrant(androidId: String) {
         collection.document(androidId).delete().await()
+    }
+
+    /** The entrants whose Android ID is in [ids]. */
+    suspend fun getByIds(ids: List<String>): List<Entrant> {
+        if (ids.isEmpty()) return emptyList()
+        // whereIn accepts at most 30 values per query
+        return ids.distinct().chunked(30).flatMap { chunk ->
+            collection.whereIn(FieldPath.documentId(), chunk).get().await().documents
+                .mapNotNull { it.toObject(EntrantDoc::class.java)?.toDomain() }
+        }
     }
 }
