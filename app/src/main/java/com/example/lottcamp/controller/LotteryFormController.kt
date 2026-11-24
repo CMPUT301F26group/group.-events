@@ -1,7 +1,5 @@
 package com.example.lottcamp.controller
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -27,7 +25,6 @@ import java.time.Instant
  * @param onSaved Called with the lottery ID after a successful save.
  * @param back Called when the screen should close.
  */
-@RequiresApi(Build.VERSION_CODES.O)
 class LotteryFormController(
     private val owner: OwnerController,
     private val ownerId: String,

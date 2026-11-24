@@ -1,6 +1,4 @@
 package com.example.lottcamp.domain
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.example.lottcamp.data.ReservationStatus
 import java.time.Instant
 import java.time.LocalDate
@@ -8,7 +6,6 @@ import java.time.LocalDate
 /**
  * Domain model representing a confirmed campsite reservation.
  */
-@RequiresApi(Build.VERSION_CODES.O)
 data class Reservation(
     val id: String,
     val entrantId: String,

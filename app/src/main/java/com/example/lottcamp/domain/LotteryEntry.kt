@@ -1,7 +1,5 @@
 package com.example.lottcamp.domain
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import java.time.Instant
 import com.example.lottcamp.data.EntryStatus
 
@@ -9,7 +7,6 @@ import com.example.lottcamp.data.EntryStatus
 /**
  * Represents an entrant's participation entry on a specific lottery's waitlist.
  */
-@RequiresApi(Build.VERSION_CODES.O)
 data class LotteryEntry(
     val id: String,
     val lotteryId: String,

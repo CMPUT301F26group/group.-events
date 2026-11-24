@@ -1,7 +1,5 @@
 package com.example.lottcamp.repository
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.example.lottcamp.data.CampsiteDoc
 import com.example.lottcamp.data.LotteryDoc
 
@@ -22,7 +20,6 @@ class LotteryRepository(
     private val collection = db.collection("lotteries")
     private val campsiteCollection = db.collection("campsites")
 
-    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getLotteryById(id: String): Lottery? {
         val snapshot = collection.document(id).get().await()
         val lotteryDoc = snapshot.toObject(LotteryDoc::class.java) ?: return null
@@ -30,7 +27,6 @@ class LotteryRepository(
         return lotteryDoc.toDomain(campsites)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getActiveLotteries(): List<Lottery> {
         val snapshot = collection.get().await()
         val docs = snapshot.documents.mapNotNull { it.toObject(LotteryDoc::class.java) }
@@ -45,7 +41,6 @@ class LotteryRepository(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun saveLottery(lottery: Lottery): String {
         val doc = lottery.toDoc()
         return if (doc.id.isEmpty()) {
@@ -80,7 +75,6 @@ class LotteryRepository(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getLotteriesByOwner(ownerId: String): List<Lottery> {
         val docs = collection.whereEqualTo("ownerId", ownerId).get().await()
             .documents.mapNotNull { it.toObject(LotteryDoc::class.java) }

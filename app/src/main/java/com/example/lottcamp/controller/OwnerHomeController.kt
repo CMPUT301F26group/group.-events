@@ -1,11 +1,8 @@
 package com.example.lottcamp.controller
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.example.lottcamp.domain.Campsite
 import com.example.lottcamp.domain.UserRole
 
-@RequiresApi(Build.VERSION_CODES.O)
 class OwnerHomeController(
     private val owner: OwnerController,
     val availableRoles: List<UserRole>,

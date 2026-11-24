@@ -1,7 +1,5 @@
 package com.example.lottcamp.controller
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -25,7 +23,6 @@ data class ChatBubble(val id: String, val text: String, val time: String, val mi
  * Controller for the message thread between the owner and the entrant of one reservation.
  * Every message is saved in the messages collection, which is also what the admin log reads.
  */
-@RequiresApi(Build.VERSION_CODES.O)
 class ChatController(
     private val ownerId: String,
     private val reservationId: String,

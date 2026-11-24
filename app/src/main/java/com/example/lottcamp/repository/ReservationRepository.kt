@@ -1,7 +1,5 @@
 package com.example.lottcamp.repository
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.example.lottcamp.data.ReservationDoc
 import com.example.lottcamp.domain.Reservation
 import com.google.firebase.Firebase
@@ -14,19 +12,16 @@ class ReservationRepository(
 ) {
     private val collection = db.collection("reservations")
 
-    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getReservationsForEntrant(entrantId: String): List<Reservation> {
         val snapshot = collection.whereEqualTo("entrantId", entrantId).get().await()
         return snapshot.documents.mapNotNull { it.toObject(ReservationDoc::class.java)?.toDomain() }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getReservationsForCampsite(campsiteId: String): List<Reservation> {
         val snapshot = collection.whereEqualTo("campsiteId", campsiteId).get().await()
         return snapshot.documents.mapNotNull { it.toObject(ReservationDoc::class.java)?.toDomain() }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun saveReservation(reservation: Reservation): String {
         val doc = reservation.toDoc()
         return if (doc.id.isEmpty()) {
@@ -44,7 +39,6 @@ class ReservationRepository(
         collection.document(id).update("status", statusName).await()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getReservationsForCampsites(campsiteIds: List<String>): List<Reservation> {
         if (campsiteIds.isEmpty()) return emptyList()
         // whereIn accepts at most 30 values per query

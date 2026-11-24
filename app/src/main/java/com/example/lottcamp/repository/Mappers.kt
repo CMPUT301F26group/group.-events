@@ -1,7 +1,5 @@
 package com.example.lottcamp.repository
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.example.lottcamp.data.AdminDoc
 import com.example.lottcamp.data.CampsiteDoc
 import com.example.lottcamp.data.CampsiteOwnerDoc
@@ -20,28 +18,22 @@ import java.time.ZoneId
 import java.util.Date
 
 // --- Date Converters ---
-//@RequiresApi(Build.VERSION_CODES.O)
 //fun Timestamp?.toInstant(): Instant? = this?.toDate()?.toInstant()
-//@RequiresApi(Build.VERSION_CODES.O)
 //fun Instant?.toTimestamp(): Timestamp? = this?.let { Timestamp(Date.from(it)) }
-@RequiresApi(Build.VERSION_CODES.O)
 fun Instant.toTimestamp(): Timestamp {
     return Timestamp(this.epochSecond, this.nano)
 }
 
 // Extension to map back from Firestore Timestamp to Instant
-@RequiresApi(Build.VERSION_CODES.O)
 fun Timestamp.toInstant(): Instant {
     return Instant.ofEpochSecond(this.seconds, this.nanoseconds.toLong())
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun Timestamp?.toLocalDate(): LocalDate? = this?.toDate()
     ?.toInstant()
     ?.atZone(ZoneId.systemDefault())
     ?.toLocalDate()
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun LocalDate?.toTimestamp(): Timestamp? = this?.let {
     val instant = it.atStartOfDay(ZoneId.systemDefault()).toInstant()
     Timestamp(Date.from(instant))
@@ -102,7 +94,6 @@ fun Campsite.toDoc(): CampsiteDoc = CampsiteDoc(
 )
 
 // --- Lottery Mapper ---
-@RequiresApi(Build.VERSION_CODES.O)
 fun LotteryDoc.toDomain(campsites: List<Campsite>): Lottery = Lottery(
     id = id,
     ownerId = ownerId,
@@ -115,7 +106,6 @@ fun LotteryDoc.toDomain(campsites: List<Campsite>): Lottery = Lottery(
     waitlistCapacity = waitlistCapacity
 )
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun Lottery.toDoc(): LotteryDoc = LotteryDoc(
     id = id,
     ownerId = ownerId,
@@ -129,7 +119,6 @@ fun Lottery.toDoc(): LotteryDoc = LotteryDoc(
 )
 
 // --- LotteryEntry Mapper ---
-@RequiresApi(Build.VERSION_CODES.O)
 fun LotteryEntryDoc.toDomain(): LotteryEntry = LotteryEntry(
     id = id,
     lotteryId = lotteryId,
@@ -138,7 +127,6 @@ fun LotteryEntryDoc.toDomain(): LotteryEntry = LotteryEntry(
     joinedAt = joinedAt.toInstant() ?: Instant.now()
 )
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun LotteryEntry.toDoc(): LotteryEntryDoc = LotteryEntryDoc(
     id = id,
     lotteryId = lotteryId,
@@ -148,7 +136,6 @@ fun LotteryEntry.toDoc(): LotteryEntryDoc = LotteryEntryDoc(
 )
 
 // --- Reservation Mapper ---
-@RequiresApi(Build.VERSION_CODES.O)
 fun ReservationDoc.toDomain(): Reservation = Reservation(
     id = id,
     entrantId = entrantId,
@@ -160,7 +147,6 @@ fun ReservationDoc.toDomain(): Reservation = Reservation(
     createdAt = createdAt.toInstant() ?: Instant.now()
 )
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun Reservation.toDoc(): ReservationDoc = ReservationDoc(
     id = id,
     entrantId = entrantId,
