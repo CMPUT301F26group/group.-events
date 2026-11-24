@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.example.lottcamp.domain.Campsite
 import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.ui.components.AppButton
+import com.example.lottcamp.ui.components.AppCampsiteThumbnail
 import com.example.lottcamp.ui.components.AppChip
 import com.example.lottcamp.ui.components.AppDivider
 import com.example.lottcamp.ui.components.AppImagePlaceholder
@@ -42,6 +43,7 @@ import com.example.lottcamp.ui.theme.LottCampTheme
 fun MyCampsiteScreen(
     campsites: List<Campsite>,
     subtitle: (Campsite) -> String,
+    image: @Composable (String) -> Unit,
     role: UserRole,
     availableRoles: List<UserRole>,
     onRoleSelected: (UserRole) -> Unit,
@@ -122,7 +124,7 @@ fun MyCampsiteScreen(
                 AppListRow(
                     title = campsite.name,
                     subtitle = subtitle(campsite),
-                    leading = { AppImagePlaceholder() },
+                    leading = { AppCampsiteThumbnail(imageId = campsite.imageId, image = image) },
                     onClick = { onCampsiteClick(campsite) },
                 )
                 AppDivider(spacing = 0.dp)
@@ -142,6 +144,7 @@ fun MyCampsiteScreenPreview() {
                 Campsite("3", "owner1", "Meadow Ridge", "Banff, AB", maxOccupancy = 6, pricePerNight = 50.0),
             ),
             subtitle = { "${it.locationName} · Published" },
+            image = {},
             role = UserRole.OWNER,
             availableRoles = UserRole.entries,
             onRoleSelected = {},

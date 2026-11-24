@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,24 +20,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.size
-import coil3.compose.AsyncImage
 
 /**
  * Campsite photo tile.
  *
- * Shows the photo at [imageUrl]. Without one, tappable tiles show an "Add photo" prompt
- * and display-only tiles show an image icon.
+ * Shows the stored photo with [imageId] through [image]. Without one, tappable tiles show
+ * an "Add photo" prompt and display-only tiles show an image icon.
  *
- * @param imageUrl Location of the photo, or null.
+ * @param imageId Id of the stored photo, or null.
+ * @param image Draws the stored photo for an id, e.g. with [AppStoredImage].
  * @param modifier Applied to the tile.
  * @param onClick Invoked when the tile is tapped. Null makes the tile display-only.
  */
 @Composable
 fun AppPhotoBox(
-    imageUrl: String?,
+    imageId: String?,
+    image: @Composable (String) -> Unit,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
 ) {
@@ -49,12 +49,7 @@ fun AppPhotoBox(
         contentAlignment = Alignment.Center,
     ) {
         when {
-            imageUrl != null -> AsyncImage(
-                model = imageUrl,
-                contentDescription = "Campsite photo",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
+            imageId != null -> image(imageId)
             onClick != null -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(Icons.Outlined.CameraAlt, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Text(
@@ -65,6 +60,25 @@ fun AppPhotoBox(
             }
             else -> Icon(Icons.Outlined.Image, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+    }
+}
+
+/** 56dp rounded thumbnail for list rows. Shows an image icon when there is no photo. */
+@Composable
+fun AppCampsiteThumbnail(
+    imageId: String?,
+    image: @Composable (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .size(56.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (imageId != null) image(imageId)
+        else Icon(Icons.Outlined.Image, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

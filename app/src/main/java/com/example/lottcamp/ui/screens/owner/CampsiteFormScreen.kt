@@ -36,7 +36,8 @@ import com.example.lottcamp.ui.theme.LottCampTheme
 fun CampsiteFormScreen(
     title: String,
     submitText: String,
-    imageUrl: String?,
+    imageId: String?,
+    image: @Composable (String) -> Unit,
     name: String,
     onNameChange: (String) -> Unit,
     nameError: String?,
@@ -72,7 +73,7 @@ fun CampsiteFormScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                AppPhotoBox(imageUrl = imageUrl, onClick = onPhotoClick, modifier = Modifier.weight(1f))
+                AppPhotoBox(imageId = imageId, image = image, onClick = onPhotoClick, modifier = Modifier.weight(1f))
                 AppMapBox(onClick = onMapClick, modifier = Modifier.weight(1f))
             }
 
@@ -175,7 +176,7 @@ fun CampsiteFormScreenPreview() {
         CampsiteFormScreen(
             title = "Edit campsite",
             submitText = "Save changes",
-            imageUrl = null,
+            imageId = null, image = {},
             name = "Pine Ridge Camp",
             onNameChange = {},
             nameError = null,

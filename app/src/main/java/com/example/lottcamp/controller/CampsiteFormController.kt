@@ -4,6 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.lottcamp.domain.Campsite
+import android.os.Build
+import androidx.annotation.RequiresApi
 
 /**
  * Controller for the register and edit campsite screen.
@@ -16,6 +18,7 @@ import com.example.lottcamp.domain.Campsite
  * @param existing Campsite being edited, or null to register a new one.
  * @param back Called when the screen should close, after going back or after a successful save.
  */
+@RequiresApi(Build.VERSION_CODES.O)
 class CampsiteFormController(
     private val owner: OwnerController,
     private val ownerId: String,
@@ -27,7 +30,7 @@ class CampsiteFormController(
     val submitText = if (existing == null) "Publish campsite" else "Save changes"
 
     /** Photo of the campsite being edited, or null. */
-    val imageUrl: String? = existing?.imageUrl
+    val imageId: String? = existing?.imageId
 
     var name by mutableStateOf(existing?.name ?: "")
         private set

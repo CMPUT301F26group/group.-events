@@ -39,7 +39,8 @@ import com.example.lottcamp.ui.theme.LottCampTheme
 @Composable
 fun CampsiteDetailsScreen(
     name: String,
-    imageUrl: String?,
+    imageId: String?,
+    image: @Composable (String) -> Unit,
     location: String,
     capacityAndPrice: String,
     year: Int,
@@ -67,7 +68,7 @@ fun CampsiteDetailsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                AppPhotoBox(imageUrl = imageUrl, modifier = Modifier.weight(1f))
+                AppPhotoBox(imageId = imageId, image = image, modifier = Modifier.weight(1f))
                 AppMapBox(modifier = Modifier.weight(1f))
             }
 
@@ -159,7 +160,8 @@ fun CampsiteDetailsScreenPreview() {
     LottCampTheme {
         CampsiteDetailsScreen(
             name = "Pine Ridge Camp",
-            imageUrl = null,
+            imageId = null,
+            image = {},
             location = "Hinton, AB",
             capacityAndPrice = "8 guests · \$65 / night",
             year = 2027,

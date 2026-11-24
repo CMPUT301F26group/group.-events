@@ -33,12 +33,14 @@ import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.repository.CampsiteOwnerRepository
 import com.example.lottcamp.repository.CampsiteRepository
 import com.example.lottcamp.repository.EntrantRepository
+import com.example.lottcamp.repository.ImageRepository
 import com.example.lottcamp.repository.LotteryEntryRepository
 import com.example.lottcamp.repository.LotteryRepository
 import com.example.lottcamp.repository.MessageRepository
 import com.example.lottcamp.repository.NotificationRepository
 import com.example.lottcamp.repository.ReservationRepository
 import com.example.lottcamp.ui.components.AppBottomNavOwner
+import com.example.lottcamp.ui.components.AppStoredImage
 import com.example.lottcamp.ui.components.MainTab
 
 /**
@@ -66,6 +68,15 @@ fun OwnerNavGraph(
     val reservationRepo = remember { ReservationRepository() }
     val messageRepo = remember { MessageRepository() }
     val ownerRepo = remember { CampsiteOwnerRepository() }
+    val imageRepo = remember { ImageRepository() }
+    val storedImage: @Composable (String) -> Unit = { id ->
+        AppStoredImage(
+            imageId = id,
+            imageRepo = imageRepo,
+            contentDescription = "Campsite photo",
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
     val controller = remember { OwnerController(ownerId, data, lotteryRepo, reservationRepo, scope) }
     val navController = rememberNavController()
     val go: (String) -> Unit = { navController.navigate(it) }
@@ -131,6 +142,7 @@ fun OwnerNavGraph(
                 MyCampsiteScreen(
                     campsites = screen.campsites,
                     subtitle = screen::subtitle,
+                    image = storedImage,
                     role = screen.role,
                     availableRoles = screen.availableRoles,
                     onRoleSelected = screen::onRoleSelected,
@@ -141,7 +153,7 @@ fun OwnerNavGraph(
             }
             composable(OwnerRoutes.REGISTER_CAMPSITE) {
                 val screen = remember { CampsiteFormController(controller, ownerId, null, back) }
-                CampsiteForm(screen, Modifier.padding(innerPadding))
+                CampsiteForm(screen, storedImage, Modifier.padding(innerPadding))
             }
             composable(OwnerRoutes.CAMPSITE) { entry ->
                 val id = entry.arguments?.getString("id") ?: ""
@@ -149,7 +161,8 @@ fun OwnerNavGraph(
                 val campsite = screen.campsite ?: return@composable // still loading
                 CampsiteDetailsScreen(
                     name = campsite.name,
-                    imageUrl = campsite.imageUrl,
+                    imageId = campsite.imageId,
+                    image = storedImage,
                     location = campsite.locationName,
                     capacityAndPrice = screen.capacityAndPrice,
                     year = screen.year,
@@ -169,7 +182,7 @@ fun OwnerNavGraph(
                 val id = entry.arguments?.getString("id") ?: ""
                 val campsite = controller.campsite(id) ?: return@composable // still loading
                 val screen = remember(id) { CampsiteFormController(controller, ownerId, campsite, back) }
-                CampsiteForm(screen, Modifier.padding(innerPadding))
+                CampsiteForm(screen, storedImage, Modifier.padding(innerPadding))
             }
             composable(OwnerRoutes.CREATE_LOTTERY) { entry ->
                 val id = entry.arguments?.getString("id") ?: ""
@@ -285,11 +298,16 @@ fun OwnerNavGraph(
 
 /** Connects [CampsiteFormScreen] to its controller. Shared by register and edit. */
 @Composable
-private fun CampsiteForm(screen: CampsiteFormController, modifier: Modifier) {
+private fun CampsiteForm(
+    screen: CampsiteFormController,
+    image: @Composable (String) -> Unit,
+    modifier: Modifier,
+) {
     CampsiteFormScreen(
         title = screen.title,
         submitText = screen.submitText,
-        imageUrl = screen.imageUrl,
+        imageId = screen.imageId,
+        image = image,
         name = screen.name,
         onNameChange = screen::onNameChange,
         nameError = screen.nameError,
