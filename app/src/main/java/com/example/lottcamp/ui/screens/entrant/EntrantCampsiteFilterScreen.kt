@@ -16,12 +16,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.lottcamp.controller.EntrantSearchController
 import com.example.lottcamp.ui.components.AppBackButton
 import com.example.lottcamp.ui.components.AppButton
 import com.example.lottcamp.ui.components.AppButtonVariant
+
+object EntrantFilterTestTags {
+    const val BACK_BUTTON = "filter_back_button"
+    const val TITLE_TEXT = "filter_title_text"
+    const val LOCATION_INPUT = "filter_location_input"
+    const val MIN_GUESTS_INPUT = "filter_min_guests_input"
+    const val MAX_PRICE_INPUT = "filter_max_price_input"
+    const val CLEAR_BUTTON = "filter_clear_button"
+    const val APPLY_BUTTON = "filter_apply_button"
+}
 
 /**
  * Filter screen allowing an entrant to refine campsite search criteria through
@@ -48,11 +59,16 @@ fun EntrantCampsiteFilterScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        AppBackButton("Back", onClick = controller::onBackClick)
+        AppBackButton(
+            label = "Back",
+            onClick = controller::onBackClick,
+            modifier = Modifier.testTag(EntrantFilterTestTags.BACK_BUTTON),
+        )
 
         Text(
             text = "Filter Campsites",
             style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.testTag(EntrantFilterTestTags.TITLE_TEXT),
         )
 
         OutlinedTextField(
@@ -60,7 +76,9 @@ fun EntrantCampsiteFilterScreen(
             onValueChange = { locationText = it },
             label = { Text("Location") },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(EntrantFilterTestTags.LOCATION_INPUT),
         )
 
         OutlinedTextField(
@@ -69,7 +87,9 @@ fun EntrantCampsiteFilterScreen(
             label = { Text("Minimum guests") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(EntrantFilterTestTags.MIN_GUESTS_INPUT),
         )
 
         OutlinedTextField(
@@ -78,7 +98,9 @@ fun EntrantCampsiteFilterScreen(
             label = { Text("Max price per night ($)") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(EntrantFilterTestTags.MAX_PRICE_INPUT),
         )
 
         Row(
@@ -94,7 +116,9 @@ fun EntrantCampsiteFilterScreen(
                     controller.clearFilters()
                     controller.onBackClick()
                 },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(EntrantFilterTestTags.CLEAR_BUTTON),
                 variant = AppButtonVariant.Secondary,
             )
 
@@ -110,7 +134,9 @@ fun EntrantCampsiteFilterScreen(
                     )
                     controller.onBackClick()
                 },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(EntrantFilterTestTags.APPLY_BUTTON),
             )
         }
     }
