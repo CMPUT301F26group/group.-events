@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.example.lottcamp.controller.EntrantSearchController
 import com.example.lottcamp.repository.ImageRepository
@@ -27,6 +28,19 @@ import com.example.lottcamp.ui.components.AppIconButton
 import com.example.lottcamp.ui.components.AppListingCard
 import com.example.lottcamp.ui.components.AppSearchBar
 import com.example.lottcamp.ui.components.AppStoredImage
+
+object EntrantSearchTestTags {
+    const val SEARCH_BAR = "search_bar"
+    const val FILTER_BUTTON = "search_filter_button"
+    const val QR_SCAN_BUTTON = "search_qr_scan_button"
+    const val ACTIVE_FILTERS_ROW = "search_active_filters_row"
+    const val RESULTS_COUNT_TEXT = "search_results_count_text"
+    const val EMPTY_STATE_TEXT = "search_empty_state_text"
+    const val RESULTS_LIST = "search_results_list"
+
+    fun activeFilterTag(key: String) = "search_active_filter_$key"
+    fun campsiteCard(campsiteId: String) = "search_campsite_card_$campsiteId"
+}
 
 /**
  * Displays the entrant campsite search screen backed by [EntrantSearchController].
@@ -55,22 +69,28 @@ fun EntrantCampsiteSearchScreen(
             AppSearchBar(
                 query = controller.searchQuery,
                 onQueryChange = controller::onSearchQueryChange,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(EntrantSearchTestTags.SEARCH_BAR),
             )
             AppIconButton(
                 icon = Icons.Filled.FilterList,
                 contentDescription = "Filter for campsites based on location, capacity, price and more",
                 onClick = controller::onOpenFilterClick,
+                modifier = Modifier.testTag(EntrantSearchTestTags.FILTER_BUTTON),
             )
             AppIconButton(
                 icon = Icons.Filled.QrCode2,
                 contentDescription = "Find a campsite from promotional QR code",
                 onClick = controller::onQrScanClick,
+                modifier = Modifier.testTag(EntrantSearchTestTags.QR_SCAN_BUTTON),
             )
         }
 
         LazyRow(
-            modifier = Modifier.heightIn(min = 36.dp),
+            modifier = Modifier
+                .heightIn(min = 36.dp)
+                .testTag(EntrantSearchTestTags.ACTIVE_FILTERS_ROW),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             currentFilter.locationName?.let { name ->
@@ -78,6 +98,7 @@ fun EntrantCampsiteSearchScreen(
                     AppFilterTag(
                         text = name,
                         onClick = controller::removeLocationFilter,
+                        modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("location")),
                     )
                 }
             }
@@ -86,6 +107,7 @@ fun EntrantCampsiteSearchScreen(
                     AppFilterTag(
                         text = name,
                         onClick = controller::removeNameFilter,
+                        modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("name")),
                     )
                 }
             }
@@ -94,6 +116,7 @@ fun EntrantCampsiteSearchScreen(
                     AppFilterTag(
                         text = "${currentFilter.startDate}-${currentFilter.endDate}",
                         onClick = controller::removeDateRangeFilter,
+                        modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("dates")),
                     )
                 }
             }
@@ -102,6 +125,7 @@ fun EntrantCampsiteSearchScreen(
                     AppFilterTag(
                         text = "$guests guests",
                         onClick = controller::removeOccupancyFilter,
+                        modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("occupancy")),
                     )
                 }
             }
@@ -110,6 +134,7 @@ fun EntrantCampsiteSearchScreen(
                     AppFilterTag(
                         text = "\$$price",
                         onClick = controller::removeMaxPriceFilter,
+                        modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("max_price")),
                     )
                 }
             }
@@ -117,6 +142,7 @@ fun EntrantCampsiteSearchScreen(
                 AppFilterTag(
                     text = tag,
                     onClick = { controller.removeTagFilter(tag) },
+                    modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("tag_$tag")),
                 )
             }
         }
@@ -135,6 +161,7 @@ fun EntrantCampsiteSearchScreen(
                 text = "${displayedResults.size} results",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag(EntrantSearchTestTags.RESULTS_COUNT_TEXT),
             )
         }
 
@@ -149,11 +176,14 @@ fun EntrantCampsiteSearchScreen(
                     text = if (controller.isLoading) "Loading campsites..." else "No campsites match your search.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.testTag(EntrantSearchTestTags.EMPTY_STATE_TEXT),
                 )
             }
         } else {
             LazyColumn(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(EntrantSearchTestTags.RESULTS_LIST),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(displayedResults, key = { it.id }) { campsite ->
@@ -170,7 +200,8 @@ fun EntrantCampsiteSearchScreen(
                                 imageRepo,
                                 contentDescription = null
                             )
-                        }
+                        },
+                        modifier = Modifier.testTag(EntrantSearchTestTags.campsiteCard(campsite.id)),
                     )
                 }
             }
