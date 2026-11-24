@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.lottcamp.controller.EntrantCampsiteDetailsController
@@ -33,6 +34,17 @@ import com.example.lottcamp.ui.components.AppRatingBar
 import com.example.lottcamp.ui.components.AppStoredImage
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+
+object EntrantDetailsTestTags {
+    const val SCREEN_LIST = "details_screen_list"
+    const val BACK_BUTTON = "details_back_button"
+    const val TITLE_TEXT = "details_title_text"
+    const val CALENDAR_SECTION = "details_calendar_section"
+    const val SELECTED_DATES_TEXT = "details_selected_dates_text"
+    const val STATUS_MESSAGE_TEXT = "details_status_message_text"
+    const val JOIN_WAITLIST_BUTTON = "details_join_waitlist_button"
+    const val VIEW_ON_MAP_BUTTON = "details_view_on_map_button"
+}
 
 /**
  * Displays campsite details, available lottery calendar windows, and waitlist registration
@@ -54,12 +66,18 @@ fun EntrantCampsiteDetailsScreen(
     val shortDateFormatter = remember { DateTimeFormatter.ofPattern("MMM d", Locale.getDefault()) }
 
     LazyColumn(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .testTag(EntrantDetailsTestTags.SCREEN_LIST),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            AppBackButton("Back to Search", onClick = controller::onBackClick)
+            AppBackButton(
+                label = "Back to Search",
+                onClick = controller::onBackClick,
+                modifier = Modifier.testTag(EntrantDetailsTestTags.BACK_BUTTON),
+            )
         }
 
         item {
@@ -84,7 +102,11 @@ fun EntrantCampsiteDetailsScreen(
 
         item {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(cs.name, style = MaterialTheme.typography.headlineMedium)
+                Text(
+                    text = cs.name,
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.testTag(EntrantDetailsTestTags.TITLE_TEXT),
+                )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("${cs.averageRating} ", style = MaterialTheme.typography.bodyMedium)
                     AppRatingBar(cs.averageRating.toFloat())
@@ -107,7 +129,10 @@ fun EntrantCampsiteDetailsScreen(
         }
 
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                modifier = Modifier.testTag(EntrantDetailsTestTags.CALENDAR_SECTION),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 AppCalendar(
                     year = controller.displayedYearMonth.year,
                     month = controller.displayedYearMonth.monthValue,
@@ -140,7 +165,8 @@ fun EntrantCampsiteDetailsScreen(
                                 text = "${stayStart.format(shortDateFormatter)} – ${stayEnd.format(dateFormatter)}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onBackground
+                                color = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.testTag(EntrantDetailsTestTags.SELECTED_DATES_TEXT),
                             )
                         }
 
@@ -227,7 +253,8 @@ fun EntrantCampsiteDetailsScreen(
                             MaterialTheme.colorScheme.error
                         } else {
                             MaterialTheme.colorScheme.primary
-                        }
+                        },
+                        modifier = Modifier.testTag(EntrantDetailsTestTags.STATUS_MESSAGE_TEXT),
                     )
                 }
             }
@@ -250,7 +277,9 @@ fun EntrantCampsiteDetailsScreen(
                 text = buttonLabel,
                 onClick = controller::onJoinWaitingListClick,
                 enabled = controller.canJoin,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(EntrantDetailsTestTags.JOIN_WAITLIST_BUTTON),
             )
         }
 
@@ -262,7 +291,9 @@ fun EntrantCampsiteDetailsScreen(
                         onClick = {
                             uriHandler.openUri("https://www.google.com/maps/search/?api=1&query=$lat,$lon")
                         },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(EntrantDetailsTestTags.VIEW_ON_MAP_BUTTON),
                         variant = AppButtonVariant.Secondary,
                     )
                 }
