@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.lottcamp.domain.Campsite
 import com.example.lottcamp.domain.UserRole
+import com.example.lottcamp.repository.ImageRepository
 
 /**
  * Controller for the admin home screen.
@@ -18,7 +19,7 @@ class AdminHomeController(
     private val admin: AdminController,
     private val navigate: (String) -> Unit = {},
 ) {
-
+    val imageRepo: ImageRepository get() = admin.imageRepo
     /** Role the admin is currently acting as. */
     var role by mutableStateOf(UserRole.ADMIN)
         private set

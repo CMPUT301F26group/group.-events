@@ -1,7 +1,5 @@
 package com.example.lottcamp.repository
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.example.lottcamp.data.EntrantDoc
 import com.example.lottcamp.data.ReservationStatus
 import com.example.lottcamp.domain.Campsite
@@ -10,6 +8,7 @@ import com.example.lottcamp.domain.Lottery
 import com.example.lottcamp.domain.LotteryEntry
 import com.example.lottcamp.domain.Reservation
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.channels.awaitClose
@@ -66,6 +65,14 @@ open class EntrantRepository(
         entrants.document(androidId).delete().await()
     }
 
+    open suspend fun getByIds(ids: List<String>): List<Entrant> {
+        if (ids.isEmpty()) return emptyList()
+        return ids.distinct().chunked(30).flatMap { chunk ->
+            entrants.whereIn(FieldPath.documentId(), chunk).get().await().documents
+                .mapNotNull { it.toObject(EntrantDoc::class.java)?.toDomain() }
+        }
+    }
+
     // --- Campsites ---
 
     /** Every campsite, used to show names and locations on booking cards. */
@@ -78,7 +85,6 @@ open class EntrantRepository(
     // --- Reservations ---
 
     /** Every reservation belonging to [entrantId]. */
-    @RequiresApi(Build.VERSION_CODES.O)
     open suspend fun getReservations(entrantId: String): List<Reservation> =
         reservationRepo.getReservationsForEntrant(entrantId)
 
@@ -90,12 +96,10 @@ open class EntrantRepository(
     // --- Waiting lists ---
 
     /** Every lottery entry belonging to [entrantId]. */
-    @RequiresApi(Build.VERSION_CODES.O)
     open suspend fun getLotteryEntries(entrantId: String): List<LotteryEntry> =
         lotteryEntryRepo.getEntriesForEntrant(entrantId)
 
     /** The lottery with [lotteryId], or null if it does not exist. */
-    @RequiresApi(Build.VERSION_CODES.O)
     open suspend fun getLottery(lotteryId: String): Lottery? =
         lotteryRepo.getLotteryById(lotteryId)
 

@@ -2,6 +2,7 @@ package com.example.lottcamp.repository
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import com.example.lottcamp.data.EntryStatus
 import com.example.lottcamp.data.LotteryEntryDoc
 import com.example.lottcamp.domain.LotteryEntry
 import com.google.firebase.Firebase
@@ -38,5 +39,14 @@ class LotteryEntryRepository(
 
     suspend fun deleteEntry(id: String) {
         collection.document(id).delete().await()
+    }
+
+    /** Android IDs of the entrants still waiting on the lottery with [lotteryId]. */
+    suspend fun getWaitingEntrantIds(lotteryId: String): List<String> {
+        val snapshot = collection.whereEqualTo("lotteryId", lotteryId).get().await()
+        return snapshot.documents
+            .mapNotNull { it.toObject(LotteryEntryDoc::class.java) }
+            .filter { it.status == EntryStatus.WAITING.name }
+            .map { it.entrantId }
     }
 }

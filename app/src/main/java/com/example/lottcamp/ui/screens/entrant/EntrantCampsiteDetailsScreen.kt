@@ -1,11 +1,15 @@
 package com.example.lottcamp.ui.screens.entrant
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -17,15 +21,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.lottcamp.domain.Campsite
 import com.example.lottcamp.repository.CampsiteRepository
+import com.example.lottcamp.repository.ImageRepository
 import com.example.lottcamp.repository.LotteryRepository
 import com.example.lottcamp.ui.components.AppBackButton
 import com.example.lottcamp.ui.components.AppButton
 import com.example.lottcamp.ui.components.AppButtonVariant
 import com.example.lottcamp.ui.components.AppRatingBar
+import com.example.lottcamp.ui.components.AppStoredImage
 
 
 @Composable
@@ -36,6 +43,7 @@ fun EntrantCampsiteDetailsScreen(
 ) {
     val campsiteRepo = CampsiteRepository()
     val lotteryRepo = LotteryRepository()
+    val imageRepo = ImageRepository()
     var campsite by remember { mutableStateOf<Campsite?>(null) }
 
     LaunchedEffect(campsiteId) {
@@ -53,7 +61,25 @@ fun EntrantCampsiteDetailsScreen(
             AppBackButton("Back to Search", onClick = { navController.navigate("entrant-campsite-search-screen") })
         }
 
-        // TODO: Add campsite image
+        item {
+            val shape = MaterialTheme.shapes.large
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f)
+                    .clip(shape)
+                    .background(MaterialTheme.colorScheme.surface)
+                    .border(1.dp, MaterialTheme.colorScheme.outline, shape),
+                contentAlignment = Alignment.Center,
+            ) {
+                AppStoredImage(
+                    imageId = cs.imageId,
+                    imageRepo = imageRepo,
+                    contentDescription = cs.name,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
 
         item {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {

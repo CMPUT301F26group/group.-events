@@ -1,4 +1,6 @@
 package com.example.lottcamp
+import android.net.Uri
+import androidx.test.platform.app.InstrumentationRegistry
 import com.example.lottcamp.domain.Campsite
 import com.example.lottcamp.domain.CampsiteOwner
 import com.example.lottcamp.domain.Entrant
@@ -7,6 +9,7 @@ import com.example.lottcamp.domain.LotteryEntry
 import com.example.lottcamp.repository.CampsiteOwnerRepository
 import com.example.lottcamp.repository.CampsiteRepository
 import com.example.lottcamp.repository.EntrantRepository
+import com.example.lottcamp.repository.ImageRepository
 import com.example.lottcamp.repository.LotteryEntryRepository
 import com.example.lottcamp.repository.LotteryRepository
 import com.google.firebase.Firebase
@@ -19,6 +22,7 @@ import org.junit.Test
 import kotlinx.coroutines.runBlocking
 import org.junit.AfterClass
 import org.junit.BeforeClass
+import java.io.File
 import java.time.Instant
 
 
@@ -50,8 +54,10 @@ class RepositoryTest {
             "Campsite 1",
             "Edmonton, AB",
             pricePerNight = 1000.0,
+            imageId = "campsite1_image",
             maxOccupancy = 3,
             tags = listOf("Has cats", "Fire pit", "Hot tub", "Tables")
+
         )
         val campsite2 = Campsite(
             "campsite2",
@@ -59,6 +65,7 @@ class RepositoryTest {
             "Campsite 2",
             "St. Paul, AB",
             pricePerNight = 0.000005,
+            imageId = "campsite2_image",
             maxOccupancy = 100000,
             tags = listOf("Terrifying", "Bone chilling", "Bleak")
         )
@@ -89,6 +96,7 @@ class RepositoryTest {
         val campsite_repo = CampsiteRepository(db)
         val lottery_repo = LotteryRepository(db)
         val lottery_entry_repo = LotteryEntryRepository(db)
+        val image_repo = ImageRepository(db)
 
         @JvmStatic
         @BeforeClass
@@ -96,6 +104,25 @@ class RepositoryTest {
          * Populate the database with test data
         * */
         fun setupTestData(): Unit = runBlocking {
+            val instrumentation = InstrumentationRegistry.getInstrumentation()
+            val context = instrumentation.targetContext
+
+            val campsiteImageFile1 = File(context.cacheDir, "campsite-1-image.webp")
+            val campsiteImageFile2 = File(context.cacheDir, "campsite-2-image.webp")
+
+            instrumentation.context.assets.open("campsite-1-image.webp").use { input ->
+                campsiteImageFile1.outputStream().use { input.copyTo(it) }
+            }
+            instrumentation.context.assets.open("campsite-2-image.webp").use { input ->
+                campsiteImageFile2.outputStream().use { input.copyTo(it) }
+            }
+
+            val campsite1ImageId = image_repo.saveFromUri(context, Uri.fromFile(campsiteImageFile1))
+            val campsite2ImageId = image_repo.saveFromUri(context, Uri.fromFile(campsiteImageFile2))
+
+            campsite1.imageId = campsite1ImageId
+            campsite2.imageId = campsite2ImageId
+
             entrant_repo.saveEntrant(entrant1)
             entrant_repo.saveEntrant(entrant2)
             campsite_owner_repo.saveOwner(owner1)

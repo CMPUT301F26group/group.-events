@@ -35,7 +35,7 @@ open class SampleEntrantRepository : EntrantRepository() {
         name = "Alex Morgan",
         phoneNumber = "780-555-0142",
         email = "alex.morgan@example.com",
-        profilePictureUrl = "https://photo.invalid/alex.png",
+        profilePictureId = "https://photo.invalid/alex.png",
     )
 
     val campsites = mutableListOf(
@@ -47,7 +47,7 @@ open class SampleEntrantRepository : EntrantRepository() {
             description = "A quiet campsite surrounded by pines.",
             maxOccupancy = 6,
             pricePerNight = 85.0,
-            imageUrl = "https://photo.invalid/pine.png",
+            imageId = "https://photo.invalid/pine.png",
             tags = listOf("Fire pit", "Pet friendly"),
             ratingSum = 27.0,
             ratingCount = 6,
@@ -60,7 +60,7 @@ open class SampleEntrantRepository : EntrantRepository() {
             description = "Mountain views and easy trail access.",
             maxOccupancy = 4,
             pricePerNight = 120.0,
-            imageUrl = "https://photo.invalid/bow.png",
+            imageId = "https://photo.invalid/bow.png",
             tags = listOf("Mountain view", "Hot tub"),
             ratingSum = 19.0,
             ratingCount = 4,
@@ -246,4 +246,5 @@ open class SampleEntrantRepository : EntrantRepository() {
     private fun date(month: Int, day: Int): Instant =
         LocalDate.of(2027, month, day)
             .atStartOfDay(ZoneId.systemDefault())
-            .toInstant()}
+            .toInstant()
+}

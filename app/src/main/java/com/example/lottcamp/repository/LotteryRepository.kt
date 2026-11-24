@@ -79,4 +79,12 @@ class LotteryRepository(
             deferreds.awaitAll().flatten()
         }
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun getLotteriesByOwner(ownerId: String): List<Lottery> {
+        val docs = collection.whereEqualTo("ownerId", ownerId).get().await()
+            .documents.mapNotNull { it.toObject(LotteryDoc::class.java) }
+        val campsiteMap = fetchCampsitesByIds(docs.flatMap { it.campsiteIds }.distinct()).associateBy { it.id }
+        return docs.map { doc -> doc.toDomain(doc.campsiteIds.mapNotNull { campsiteMap[it] }) }
+    }
 }
