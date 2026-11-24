@@ -254,15 +254,6 @@ fun EntrantCampsiteDetailsScreen(
             )
         }
 
-        item {
-            AppButton(
-                text = "Rate this campsite",
-                onClick = controller::onRateCampsiteClick,
-                modifier = Modifier.fillMaxWidth(),
-                variant = AppButtonVariant.Secondary,
-            )
-        }
-
         cs.latitude?.let { lat ->
             cs.longitude?.let { lon ->
                 item {
