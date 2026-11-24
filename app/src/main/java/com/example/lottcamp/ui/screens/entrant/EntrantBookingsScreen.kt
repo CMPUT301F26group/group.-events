@@ -155,7 +155,7 @@ private fun BookingsContent(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("Loading big fella")
+                CircularProgressIndicator()
             }
         } else {
             when (selectedTab) {
