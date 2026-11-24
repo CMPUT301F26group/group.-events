@@ -1,7 +1,5 @@
 package com.example.lottcamp.ui.screens.owner
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
@@ -52,7 +50,6 @@ import com.example.lottcamp.ui.components.MainTab
  * @param onRoleChange Called when the user picks a different role.
  * @param data Where the campsites come from. Tests can pass a fake.
  */
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun OwnerNavGraph(
     ownerId: String,
@@ -333,7 +330,6 @@ private fun CampsiteForm(
 }
 
 /** Connects [LotteryFormScreen] to its controller. Shared by create and edit. */
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun LotteryForm(screen: LotteryFormController, modifier: Modifier) {
     LotteryFormScreen(

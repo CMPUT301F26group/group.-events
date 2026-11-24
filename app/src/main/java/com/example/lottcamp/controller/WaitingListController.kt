@@ -1,8 +1,6 @@
 package com.example.lottcamp.controller
 
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -32,7 +30,6 @@ data class WaitingRow(val id: String, val name: String, val subtitle: String, va
  * Shows everyone who joined the lottery [lotteryId]. When registration has closed and no draw
  * has happened yet, it draws the winners and notifies every entrant.
  */
-@RequiresApi(Build.VERSION_CODES.O)
 class WaitingListController(
     private val lotteryId: String,
     private val lotteries: LotteryRepository,

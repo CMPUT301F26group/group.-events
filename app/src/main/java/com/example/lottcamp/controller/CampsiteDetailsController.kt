@@ -1,7 +1,5 @@
 package com.example.lottcamp.controller
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
@@ -13,7 +11,6 @@ import java.util.Calendar
 internal fun formatPrice(price: Double): String =
     if (price % 1.0 == 0.0) price.toInt().toString() else "%.2f".format(price)
 
-@RequiresApi(Build.VERSION_CODES.O)
 class CampsiteDetailsController(
     private val owner: OwnerController,
     private val campsiteId: String,

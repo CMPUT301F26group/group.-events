@@ -1,8 +1,6 @@
 package com.example.lottcamp.ui.screens.entrant
 
-import android.os.Build
 import android.provider.Settings
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -84,7 +82,6 @@ private data class WaitingListCard(
  * @param data Where the bookings come from. Tests and previews pass
  *   [com.example.lottcamp.repository.SampleEntrantRepository].
  */
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EntrantBookingsScreen(
     navController: NavController,
@@ -220,7 +217,6 @@ fun EntrantBookingsScreen(
  * @param onRateCampsite Invoked by a "Rate campsite" button.
  * @param onLeaveWaitingList Invoked by a "Leave waiting list" button.
  */
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun BookingsContent(
     activeBookings: List<BookingCard>,
@@ -477,22 +473,18 @@ private fun formatDateRange(
 private fun formatDate(instant: Instant): String =
     instant.atZone(ZoneId.systemDefault()).toLocalDate().format(monthDayYearFormatter)
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, heightDp = 900, name = "Bookings - Active")
 @Composable
 private fun BookingsActivePreview() = BookingsPreview(initialTab = 0)
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, heightDp = 900, name = "Bookings - Past")
 @Composable
 private fun BookingsPastPreview() = BookingsPreview(initialTab = 1)
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, heightDp = 900, name = "Bookings - Waiting lists")
 @Composable
 private fun BookingsWaitingPreview() = BookingsPreview(initialTab = 2)
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun BookingsPreview(initialTab: Int) {
     val data = remember { SampleEntrantRepository() }

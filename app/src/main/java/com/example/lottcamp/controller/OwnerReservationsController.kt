@@ -1,7 +1,5 @@
 package com.example.lottcamp.controller
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -38,7 +36,6 @@ fun reservationCode(id: String) = "RES-" + id.takeLast(4).uppercase()
  * Lists the reservations on the owner's campsites under Active, Past and Cancelled,
  * rejects reservations, and opens the message thread.
  */
-@RequiresApi(Build.VERSION_CODES.O)
 class OwnerReservationsController(
     private val ownerId: String,
     private val owner: OwnerController,

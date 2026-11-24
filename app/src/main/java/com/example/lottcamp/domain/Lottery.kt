@@ -1,7 +1,5 @@
 package com.example.lottcamp.domain
 import com.example.lottcamp.data.EntryStatus
-import android.os.Build
-import androidx.annotation.RequiresApi
 import java.time.Instant
 
 
@@ -20,7 +18,6 @@ data class Lottery(
     val waitlistCapacity: Int? = null
 ) {
     /** Checks whether the registration window is currently active. */
-    @RequiresApi(Build.VERSION_CODES.O)
     fun isRegistrationOpen(now: Instant = Instant.now()): Boolean {
         return now.isAfter(registrationStart) && now.isBefore(registrationEnd)
     }
@@ -33,7 +30,6 @@ data class Lottery(
     /**
      * Factory method to construct a new [LotteryEntry] for an entrant if registration is open.
      */
-    @RequiresApi(Build.VERSION_CODES.O)
     fun createEntry(entrant: Entrant, currentWaitlistSize: Int, now: Instant = Instant.now()): LotteryEntry {
         check(isRegistrationOpen(now)) { "Lottery registration is not open." }
         check(!isWaitlistFull(currentWaitlistSize)) { "Lottery waitlist is full." }

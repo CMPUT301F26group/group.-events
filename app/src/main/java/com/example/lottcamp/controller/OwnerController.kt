@@ -1,7 +1,5 @@
 package com.example.lottcamp.controller
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -17,7 +15,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import java.time.Instant
 
-@RequiresApi(Build.VERSION_CODES.O)
 class OwnerController(
     private val ownerId: String,
     private val data: CampsiteRepository,

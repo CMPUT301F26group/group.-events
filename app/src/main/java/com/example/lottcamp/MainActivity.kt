@@ -1,13 +1,11 @@
 package com.example.lottcamp
 
 import android.annotation.SuppressLint
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,7 +19,6 @@ import com.example.lottcamp.ui.theme.LottCampTheme
 
 class MainActivity : ComponentActivity() {
     @SuppressLint("HardwareIds")
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

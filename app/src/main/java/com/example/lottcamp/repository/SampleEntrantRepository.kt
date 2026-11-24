@@ -1,7 +1,5 @@
 package com.example.lottcamp.repository
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.example.lottcamp.data.EntryStatus
 import com.example.lottcamp.data.ReservationStatus
 import com.example.lottcamp.domain.Campsite
@@ -23,7 +21,6 @@ import kotlinx.coroutines.flow.flowOf
  * lookups ignore the requested entrant ID so the screens show data for whichever
  * device or emulator is running them.
  */
-@RequiresApi(Build.VERSION_CODES.O)
 open class SampleEntrantRepository : EntrantRepository() {
     companion object {
         /** ID used by the sample reservations and lottery entries. */
