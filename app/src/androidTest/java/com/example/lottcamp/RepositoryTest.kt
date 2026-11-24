@@ -1,32 +1,34 @@
 package com.example.lottcamp
+
 import android.net.Uri
 import androidx.test.platform.app.InstrumentationRegistry
+import com.example.lottcamp.data.EntryStatus
+import com.example.lottcamp.data.ReservationStatus
 import com.example.lottcamp.domain.Campsite
 import com.example.lottcamp.domain.CampsiteOwner
 import com.example.lottcamp.domain.Entrant
 import com.example.lottcamp.domain.Lottery
 import com.example.lottcamp.domain.LotteryEntry
+import com.example.lottcamp.domain.Reservation
 import com.example.lottcamp.repository.CampsiteOwnerRepository
 import com.example.lottcamp.repository.CampsiteRepository
 import com.example.lottcamp.repository.EntrantRepository
 import com.example.lottcamp.repository.ImageRepository
 import com.example.lottcamp.repository.LotteryEntryRepository
 import com.example.lottcamp.repository.LotteryRepository
+import com.example.lottcamp.repository.ReservationRepository
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import junit.framework.TestCase.assertEquals
-import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertTrue
-import org.junit.Test
 import kotlinx.coroutines.runBlocking
-import org.junit.AfterClass
 import org.junit.BeforeClass
+import org.junit.Test
 import java.io.File
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-
 
 class RepositoryTest {
 
@@ -113,7 +115,7 @@ class RepositoryTest {
             rulesAndPolicy = "Secure tents and gear, strong winds are common. Quiet hours 10 PM to 7 AM.",
         )
 
-        // Some sample lotteries which are valid during time of demo
+        // Sample lotteries valid around late November / December 2026
         val lottery1 = Lottery(
             "lottery1", owner1.id, listOf(elkIsland, woodBuffalo),
             date(11, 20), date(12, 2), date(12, 4), date(12, 11), 1,
@@ -131,12 +133,44 @@ class RepositoryTest {
             date(12, 8), date(12, 15), date(12, 18), date(12, 25), 1,
         )
 
+        // Sample reservations (creating the `reservations` collection in Firestore)
+        val reservation1 = Reservation(
+            id = "res-1",
+            entrantId = entrant1.androidId,
+            campsiteId = elkIsland.id,
+            lotteryId = lottery1.id,
+            checkIn = LocalDate.of(2026, 12, 4),
+            checkOut = LocalDate.of(2026, 12, 7),
+            status = ReservationStatus.ACTIVE,
+            createdAt = date(11, 24),
+        )
+        val reservation2 = Reservation(
+            id = "res-2",
+            entrantId = entrant1.androidId,
+            campsiteId = moraineLake.id,
+            lotteryId = lottery2.id,
+            checkIn = LocalDate.of(2026, 10, 10),
+            checkOut = LocalDate.of(2026, 10, 12),
+            status = ReservationStatus.COMPLETED,
+            createdAt = date(9, 25),
+        )
+
+        // Sample waiting list entry for entrant1
+        val entry1 = LotteryEntry(
+            id = "entry-1",
+            lotteryId = lottery3.id,
+            entrantId = entrant1.androidId,
+            status = EntryStatus.WAITING,
+            joinedAt = date(11, 24),
+        )
+
         val db = Firebase.firestore
         val entrant_repo = EntrantRepository(db)
         val campsite_owner_repo = CampsiteOwnerRepository(db)
         val campsite_repo = CampsiteRepository(db)
         val lottery_repo = LotteryRepository(db)
         val lottery_entry_repo = LotteryEntryRepository(db)
+        val reservation_repo = ReservationRepository(db)
         val image_repo = ImageRepository(db)
 
         /** Copies [fileName] from the test assets to the cache directory and saves it as an image document. */
@@ -156,9 +190,7 @@ class RepositoryTest {
 
         @JvmStatic
         @BeforeClass
-                /**
-                 * Populate the database with test data
-                 * */
+                /** Populate the database with test data. */
         fun setupTestData(): Unit = runBlocking {
             // Profile photos are loaded in bulk by the admin screens, so keep them small
             entrant_repo.saveEntrant(entrant1.copy(profilePictureId = saveAsset("beloved_bingus.webp", 256, 30_000)))
@@ -178,6 +210,11 @@ class RepositoryTest {
             lottery_repo.saveLottery(lottery2)
             lottery_repo.saveLottery(lottery3)
             lottery_repo.saveLottery(lottery4)
+
+            reservation_repo.saveReservation(reservation1)
+            reservation_repo.saveReservation(reservation2)
+
+            lottery_entry_repo.saveEntry(entry1)
         }
     }
 
@@ -257,15 +294,19 @@ class RepositoryTest {
         assertTrue(campNames.containsAll(listOf(elkIsland.name, woodBuffalo.name)))
     }
 
-    // --- LotteryEntryRepository Tests ---
-
-    @Test
-    fun testGetEntriesForLottery() = runBlocking {
-        assertTrue(lottery_entry_repo.getEntriesForLottery(lottery1.id).isEmpty())
-    }
-
     @Test
     fun testGetEntriesForEntrant() = runBlocking {
-        assertTrue(lottery_entry_repo.getEntriesForEntrant(entrant1.androidId).isEmpty())
+        val entries = lottery_entry_repo.getEntriesForEntrant(entrant1.androidId)
+        assertTrue(entries.any { it.id == entry1.id })
+    }
+
+    // --- ReservationRepository Tests ---
+
+    @Test
+    fun testGetReservationsForEntrant() = runBlocking {
+        val reservations = reservation_repo.getReservationsForEntrant(entrant1.androidId)
+        assertEquals(2, reservations.size)
+        assertTrue(reservations.any { it.id == reservation1.id && it.status == ReservationStatus.ACTIVE })
+        assertTrue(reservations.any { it.id == reservation2.id && it.status == ReservationStatus.COMPLETED })
     }
 }

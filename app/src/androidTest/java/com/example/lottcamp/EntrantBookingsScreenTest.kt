@@ -1,5 +1,10 @@
 package com.example.lottcamp
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
@@ -11,9 +16,13 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.lottcamp.controller.EntrantBookingsController
+import com.example.lottcamp.controller.EntrantRoutes
 import com.example.lottcamp.repository.SampleEntrantRepository
 import com.example.lottcamp.ui.screens.entrant.EntrantBookingsScreen
 import com.example.lottcamp.ui.screens.entrant.EntrantCampsiteRatingScreen
@@ -35,17 +44,36 @@ class EntrantBookingsScreenTest {
         rule.setContent {
             LottCampTheme {
                 val navController = rememberNavController()
-                NavHost(navController, startDestination = "entrant-bookings-screen") {
-                    composable("entrant-bookings-screen") {
-                        EntrantBookingsScreen(navController, Modifier, data)
+                val scope = rememberCoroutineScope()
+                val controller = remember(scope, data) {
+                    EntrantBookingsController(
+                        entrantId = "entrant1",
+                        scope = scope,
+                        data = data,
+                        navigate = { route -> navController.navigate(route) },
+                    )
+                }
+
+                LaunchedEffect(controller) {
+                    controller.refresh()
+                }
+
+                NavHost(navController, startDestination = EntrantRoutes.BOOKINGS) {
+                    composable(EntrantRoutes.BOOKINGS) {
+                        EntrantBookingsScreen(controller = controller)
                     }
-                    composable("entrant-campsite-rating-screen/{campsiteId}") { entry ->
-                        EntrantCampsiteRatingScreen(
-                            navController,
-                            Modifier,
-                            entry.arguments?.getString("campsiteId") ?: "",
-                            data,
-                        )
+                    composable(
+                        route = EntrantRoutes.RATE_CAMPSITE,
+                        arguments = listOf(navArgument("campsiteId") { type = NavType.StringType }),
+                    ) { entry ->
+                        Scaffold { innerPadding ->
+                            EntrantCampsiteRatingScreen(
+                                navController = navController,
+                                modifier = Modifier.padding(innerPadding),
+                                campsiteId = entry.arguments?.getString("campsiteId") ?: "",
+                                data = data,
+                            )
+                        }
                     }
                 }
             }
