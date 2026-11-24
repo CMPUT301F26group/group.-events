@@ -17,153 +17,39 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.example.lottcamp.data.EntryStatus
-import com.example.lottcamp.domain.Campsite
-import com.example.lottcamp.domain.Entrant
-import com.example.lottcamp.domain.Lottery
-import com.example.lottcamp.domain.LotteryEntry
-import com.example.lottcamp.repository.CampsiteRepository
-import com.example.lottcamp.repository.EntrantRepository
-import com.example.lottcamp.repository.ImageRepository
-import com.example.lottcamp.repository.LotteryEntryRepository
-import com.example.lottcamp.repository.LotteryRepository
+import com.example.lottcamp.controller.EntrantCampsiteDetailsController
 import com.example.lottcamp.ui.components.AppBackButton
 import com.example.lottcamp.ui.components.AppButton
 import com.example.lottcamp.ui.components.AppButtonVariant
 import com.example.lottcamp.ui.components.AppCalendar
 import com.example.lottcamp.ui.components.AppRatingBar
 import com.example.lottcamp.ui.components.AppStoredImage
-import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
- * Displays detailed information for a campsite and allows an entrant to enroll in an active lottery.
+ * Displays campsite details, available lottery calendar windows, and waitlist registration
+ * backed by [EntrantCampsiteDetailsController].
  *
- * Fetches campsite metadata and upcoming lotteries from Firestore, highlights available stay
- * windows on an interactive calendar, and enables joining the waiting list for a selected
- * lottery period.
- *
- * @param navController Navigation controller used to return to search or open the rating screen.
- * @param campsiteId Unique Firestore document ID of the campsite to display.
- * @param entrantId Unique identifier (device Android ID or test ID) of the current entrant.
- * @param modifier Modifier applied to the root container.
+ * @param controller Controller owning campsite, lottery, and enrollment state.
+ * @param modifier Modifier applied to the root lazy column.
  */
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EntrantCampsiteDetailsScreen(
-    navController: NavController,
-    campsiteId: String,
-    entrantId: String,
+    controller: EntrantCampsiteDetailsController,
     modifier: Modifier = Modifier,
 ) {
-    val campsiteRepo = remember { CampsiteRepository() }
-    val lotteryRepo = remember { LotteryRepository() }
-    val lotteryEntryRepo = remember { LotteryEntryRepository() }
-    val entrantRepo = remember { EntrantRepository() }
-    val imageRepo = remember { ImageRepository() }
+    val cs = controller.campsite ?: return
     val uriHandler = LocalUriHandler.current
-    val coroutineScope = rememberCoroutineScope()
-    val zoneId = remember { ZoneId.systemDefault() }
-
-    var campsite by remember { mutableStateOf<Campsite?>(null) }
-    var upcomingLotteries by remember { mutableStateOf<List<Lottery>>(emptyList()) }
-    var selectedLottery by remember { mutableStateOf<Lottery?>(null) }
-    var entrantEntries by remember { mutableStateOf<List<LotteryEntry>>(emptyList()) }
-    var selectedWaitlistCount by remember { mutableIntStateOf(0) }
-    var displayedYearMonth by remember { mutableStateOf(YearMonth.now(zoneId)) }
-    var isSubmitting by remember { mutableStateOf(false) }
-    var statusMessage by remember { mutableStateOf<String?>(null) }
-    var isErrorMessage by remember { mutableStateOf(false) }
-
-    LaunchedEffect(campsiteId, entrantId) {
-        campsite = campsiteRepo.getCampsiteById(campsiteId)
-
-        val now = Instant.now()
-        val fetchedLotteries = lotteryRepo.getLotteriesForCampsite(campsiteId)
-            .filter { now.isBefore(it.registrationEnd) }
-            .sortedBy { it.bookingStart }
-
-        upcomingLotteries = fetchedLotteries
-        entrantEntries = lotteryEntryRepo.getEntriesForEntrant(entrantId)
-
-        // Jump the calendar to the month of the earliest upcoming/open lottery
-        fetchedLotteries.firstOrNull()?.let { earliest ->
-            displayedYearMonth = YearMonth.from(earliest.bookingStart.atZone(zoneId))
-        }
-    }
-
-    LaunchedEffect(selectedLottery?.id) {
-        val lottery = selectedLottery
-        selectedWaitlistCount = if (lottery != null) {
-            lotteryEntryRepo.getWaitingEntrantIds(lottery.id).size
-        } else {
-            0
-        }
-    }
-
-    val cs = campsite ?: return
-
-    // Map each LocalDate in a lottery's booking window to its Lottery
-    val dateToLotteryMap = remember(upcomingLotteries, zoneId) {
-        buildMap {
-            for (lottery in upcomingLotteries) {
-                for (date in lottery.bookingDates(zoneId)) {
-                    put(date, lottery)
-                }
-            }
-        }
-    }
-
-    val availableDaysInMonth = remember(upcomingLotteries, displayedYearMonth, zoneId) {
-        upcomingLotteries
-            .flatMap { it.bookingDates(zoneId) }
-            .filter { YearMonth.from(it) == displayedYearMonth }
-            .map { it.dayOfMonth }
-            .toSet()
-    }
-
-    val selectedDaysInMonth = remember(selectedLottery, displayedYearMonth, zoneId) {
-        selectedLottery
-            ?.bookingDates(zoneId)
-            ?.filter { YearMonth.from(it) == displayedYearMonth }
-            ?.map { it.dayOfMonth }
-            ?.toSet()
-            ?: emptySet()
-    }
-
-    val alreadyJoinedSelected = remember(selectedLottery, entrantEntries) {
-        val currentId = selectedLottery?.id ?: return@remember false
-        entrantEntries.any {
-            it.lotteryId == currentId &&
-                    (it.status == EntryStatus.WAITING || it.status == EntryStatus.WON)
-        }
-    }
-
-    val now = Instant.now()
-    val isSelectedNotYetOpen = selectedLottery?.let { now.isBefore(it.registrationStart) } == true
-    val isSelectedOpen = selectedLottery?.isRegistrationOpen(now) == true
-    val isSelectedFull = selectedLottery?.isWaitlistFull(selectedWaitlistCount) == true
-    val canJoin = selectedLottery != null && isSelectedOpen && !alreadyJoinedSelected && !isSelectedFull && !isSubmitting
-
+    val zoneId = controller.zoneId
     val dateFormatter = remember { DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault()) }
     val shortDateFormatter = remember { DateTimeFormatter.ofPattern("MMM d", Locale.getDefault()) }
 
@@ -173,7 +59,7 @@ fun EntrantCampsiteDetailsScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            AppBackButton("Back to Search", onClick = { navController.navigate("entrant-campsite-search-screen") })
+            AppBackButton("Back to Search", onClick = controller::onBackClick)
         }
 
         item {
@@ -189,7 +75,7 @@ fun EntrantCampsiteDetailsScreen(
             ) {
                 AppStoredImage(
                     imageId = cs.imageId,
-                    imageRepo = imageRepo,
+                    imageRepo = controller.imageRepo,
                     contentDescription = cs.name,
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -223,27 +109,16 @@ fun EntrantCampsiteDetailsScreen(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 AppCalendar(
-                    year = displayedYearMonth.year,
-                    month = displayedYearMonth.monthValue,
-                    availableDays = availableDaysInMonth,
-                    selectedDays = selectedDaysInMonth,
-                    onPreviousMonth = { displayedYearMonth = displayedYearMonth.minusMonths(1) },
-                    onNextMonth = { displayedYearMonth = displayedYearMonth.plusMonths(1) },
-                    onDayClick = { day ->
-                        val clickedDate = displayedYearMonth.atDay(day)
-                        val matchedLottery = dateToLotteryMap[clickedDate]
-                        if (matchedLottery != null) {
-                            statusMessage = null
-                            selectedLottery = if (selectedLottery?.id == matchedLottery.id) {
-                                null
-                            } else {
-                                matchedLottery
-                            }
-                        }
-                    }
+                    year = controller.displayedYearMonth.year,
+                    month = controller.displayedYearMonth.monthValue,
+                    availableDays = controller.availableDaysInMonth,
+                    selectedDays = controller.selectedDaysInMonth,
+                    onPreviousMonth = controller::onPreviousMonth,
+                    onNextMonth = controller::onNextMonth,
+                    onDayClick = controller::onDayClick,
                 )
 
-                val currentLottery = selectedLottery
+                val currentLottery = controller.selectedLottery
                 if (currentLottery != null) {
                     val stayStart = currentLottery.bookingStart.atZone(zoneId).toLocalDate()
                     val stayEnd = currentLottery.bookingEnd.atZone(zoneId).toLocalDate()
@@ -269,7 +144,7 @@ fun EntrantCampsiteDetailsScreen(
                             )
                         }
 
-                        if (isSelectedNotYetOpen) {
+                        if (controller.isSelectedNotYetOpen) {
                             HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 
                             Row(
@@ -324,7 +199,7 @@ fun EntrantCampsiteDetailsScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = "$selectedWaitlistCount / $capacity",
+                                    text = "${controller.selectedWaitlistCount} / $capacity",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onBackground
@@ -334,7 +209,7 @@ fun EntrantCampsiteDetailsScreen(
                     }
                 } else {
                     Text(
-                        text = if (upcomingLotteries.isEmpty()) {
+                        text = if (controller.upcomingLotteries.isEmpty()) {
                             "No upcoming lotteries are currently scheduled for this campsite."
                         } else {
                             "Tap a highlighted date range on the calendar to select a lottery."
@@ -344,11 +219,11 @@ fun EntrantCampsiteDetailsScreen(
                     )
                 }
 
-                statusMessage?.let { msg ->
+                controller.statusMessage?.let { msg ->
                     Text(
                         text = msg,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if (isErrorMessage) {
+                        color = if (controller.isErrorMessage) {
                             MaterialTheme.colorScheme.error
                         } else {
                             MaterialTheme.colorScheme.primary
@@ -360,64 +235,29 @@ fun EntrantCampsiteDetailsScreen(
 
         item {
             val buttonLabel = when {
-                isSubmitting -> "Joining waiting list..."
-                alreadyJoinedSelected -> "Already on waiting list"
-                isSelectedNotYetOpen -> {
-                    val opens = selectedLottery!!.registrationStart.atZone(zoneId).toLocalDate()
+                controller.isSubmitting -> "Joining waiting list..."
+                controller.alreadyJoinedSelected -> "Already on waiting list"
+                controller.isSelectedNotYetOpen -> {
+                    val opens = controller.selectedLottery!!.registrationStart.atZone(zoneId).toLocalDate()
                     "Opens ${opens.format(shortDateFormatter)}"
                 }
-                selectedLottery != null && !isSelectedOpen -> "Registration closed"
-                isSelectedFull -> "Waiting list full"
+                controller.selectedLottery != null && !controller.isSelectedOpen -> "Registration closed"
+                controller.isSelectedFull -> "Waiting list full"
                 else -> "Join waiting list"
             }
 
             AppButton(
-                buttonLabel,
-                onClick = {
-                    val lottery = selectedLottery ?: return@AppButton
-                    if (!canJoin) return@AppButton
-
-                    coroutineScope.launch {
-                        isSubmitting = true
-                        statusMessage = null
-                        try {
-                            val latestLottery = lotteryRepo.getLotteryById(lottery.id) ?: lottery
-                            val currentCount = lotteryEntryRepo.getWaitingEntrantIds(latestLottery.id).size
-                            val entrant = entrantRepo.getEntrantByAndroidId(entrantId)
-                                ?: Entrant(
-                                    androidId = entrantId,
-                                    name = "",
-                                    phoneNumber = "",
-                                    email = ""
-                                )
-
-                            val newEntry = latestLottery.createEntry(
-                                entrant = entrant,
-                                currentWaitlistSize = currentCount
-                            )
-                            val savedId = lotteryEntryRepo.saveEntry(newEntry)
-
-                            entrantEntries = entrantEntries + newEntry.copy(id = savedId)
-                            selectedWaitlistCount = currentCount + 1
-                            isErrorMessage = false
-                            statusMessage = "Successfully joined the waiting list!"
-                        } catch (e: Exception) {
-                            isErrorMessage = true
-                            statusMessage = e.message ?: "Unable to join the waiting list."
-                        } finally {
-                            isSubmitting = false
-                        }
-                    }
-                },
-                enabled = canJoin,
+                text = buttonLabel,
+                onClick = controller::onJoinWaitingListClick,
+                enabled = controller.canJoin,
                 modifier = Modifier.fillMaxWidth()
             )
         }
 
         item {
             AppButton(
-                "Rate this campsite",
-                onClick = { navController.navigate("entrant-campsite-rating-screen/${cs.id}") },
+                text = "Rate this campsite",
+                onClick = controller::onRateCampsiteClick,
                 modifier = Modifier.fillMaxWidth(),
                 variant = AppButtonVariant.Secondary,
             )
@@ -427,7 +267,7 @@ fun EntrantCampsiteDetailsScreen(
             cs.longitude?.let { lon ->
                 item {
                     AppButton(
-                        "View on map",
+                        text = "View on map",
                         onClick = {
                             uriHandler.openUri("https://www.google.com/maps/search/?api=1&query=$lat,$lon")
                         },
@@ -438,19 +278,4 @@ fun EntrantCampsiteDetailsScreen(
             }
         }
     }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-private fun Lottery.bookingDates(zoneId: ZoneId = ZoneId.systemDefault()): List<LocalDate> {
-    val start = bookingStart.atZone(zoneId).toLocalDate()
-    val end = bookingEnd.atZone(zoneId).toLocalDate()
-    if (end.isBefore(start)) return listOf(start)
-
-    val dates = mutableListOf<LocalDate>()
-    var current = start
-    while (!current.isAfter(end)) {
-        dates.add(current)
-        current = current.plusDays(1)
-    }
-    return dates
 }
