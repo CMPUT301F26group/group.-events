@@ -55,8 +55,6 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
 /**
  * Displays detailed information for a campsite and allows an entrant to enroll in an active lottery.
  *
@@ -65,17 +63,18 @@ import java.util.Locale
  * lottery period.
  *
  * @param navController Navigation controller used to return to search or open the rating screen.
- * @param modifier Modifier applied to the root container.
  * @param campsiteId Unique Firestore document ID of the campsite to display.
+ * @param entrantId Unique identifier (device Android ID or test ID) of the current entrant.
+ * @param modifier Modifier applied to the root container.
  */
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
 fun EntrantCampsiteDetailsScreen(
     navController: NavController,
-    modifier: Modifier = Modifier,
     campsiteId: String,
+    entrantId: String,
+    modifier: Modifier = Modifier,
 ) {
-    // Hardcoded for collaborative testing; replace with device androidId later
-    val entrantId = "entrant1"
-
     val campsiteRepo = remember { CampsiteRepository() }
     val lotteryRepo = remember { LotteryRepository() }
     val lotteryEntryRepo = remember { LotteryEntryRepository() }
@@ -95,7 +94,7 @@ fun EntrantCampsiteDetailsScreen(
     var statusMessage by remember { mutableStateOf<String?>(null) }
     var isErrorMessage by remember { mutableStateOf(false) }
 
-    LaunchedEffect(campsiteId) {
+    LaunchedEffect(campsiteId, entrantId) {
         campsite = campsiteRepo.getCampsiteById(campsiteId)
 
         val now = Instant.now()

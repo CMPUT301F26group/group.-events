@@ -1,6 +1,7 @@
 package com.example.lottcamp.ui.screens.entrant
 
-import android.provider.Settings
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +30,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -73,11 +73,12 @@ private data class WaitingListCard(
 /**
  * Entrant bookings: active reservations, past reservations and waiting lists.
  *
- * Reservations and lottery entries are loaded for the current Android ID.
+ * Reservations and lottery entries are loaded for the given [entrantId].
  * Cancelling a reservation or leaving a waiting list asks for confirmation
  * first. Past reservations offer a button that opens the rating screen.
  *
  * @param navController Used to open the rating screen for a past stay.
+ * @param entrantId Unique identifier (device Android ID or test ID) of the current entrant.
  * @param modifier Applied to the whole screen.
  * @param data Where the bookings come from. Tests and previews pass
  *   [com.example.lottcamp.repository.SampleEntrantRepository].
@@ -85,15 +86,11 @@ private data class WaitingListCard(
 @Composable
 fun EntrantBookingsScreen(
     navController: NavController,
-    modifier: Modifier,
+    entrantId: String,
+    modifier: Modifier = Modifier,
     data: EntrantRepository = EntrantRepository(),
 ) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
-
-    val androidId = remember {
-        Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID) ?: ""
-    }
 
     var activeBookings by remember { mutableStateOf<List<BookingCard>>(emptyList()) }
     var pastBookings by remember { mutableStateOf<List<BookingCard>>(emptyList()) }
@@ -102,17 +99,17 @@ fun EntrantBookingsScreen(
     var bookingToCancel by remember { mutableStateOf<BookingCard?>(null) }
     var waitingToLeave by remember { mutableStateOf<WaitingListCard?>(null) }
 
-    LaunchedEffect(androidId) {
+    LaunchedEffect(entrantId) {
         isLoading = true
         try {
             val campsites = data.getCampsites().associateBy { it.id }
             val today = LocalDate.now()
 
-            val reservations = data.getReservations(androidId)
+            val reservations = data.getReservations(entrantId)
             val (past, active) = reservations.partition { reservation ->
                 reservation.status == ReservationStatus.COMPLETED ||
-                    (reservation.status == ReservationStatus.ACTIVE &&
-                        reservation.checkOut.isBefore(today))
+                        (reservation.status == ReservationStatus.ACTIVE &&
+                                reservation.checkOut.isBefore(today))
             }
 
             fun Reservation.toCard(): BookingCard {
@@ -132,7 +129,7 @@ fun EntrantBookingsScreen(
                 .map { it.toCard() }
             pastBookings = past.map { it.toCard() }
 
-            waitingLists = data.getLotteryEntries(androidId)
+            waitingLists = data.getLotteryEntries(entrantId)
                 .filter { it.status == EntryStatus.WAITING }
                 .mapNotNull { entry ->
                     val lottery = data.getLottery(entry.lotteryId)
@@ -166,8 +163,8 @@ fun EntrantBookingsScreen(
         AppDialog(
             title = "Cancel booking?",
             message = "Your reservation at ${booking.campsiteName} " +
-                "(${formatDateRange(booking.checkIn, booking.checkOut, includeYear = false)}) " +
-                "will be cancelled and refunded.",
+                    "(${formatDateRange(booking.checkIn, booking.checkOut, includeYear = false)}) " +
+                    "will be cancelled and refunded.",
             dismissText = "Keep it",
             onDismiss = { bookingToCancel = null },
             confirmText = "Cancel booking",
@@ -187,7 +184,7 @@ fun EntrantBookingsScreen(
         AppDialog(
             title = "Leave waiting list?",
             message = "You'll leave the waiting list for ${waiting.campsiteName}. " +
-                "You can rejoin while registration is open.",
+                    "You can rejoin while registration is open.",
             dismissText = "Stay",
             onDismiss = { waitingToLeave = null },
             confirmText = "Leave waiting list",
@@ -509,7 +506,7 @@ private fun BookingsPreview(initialTab: Int) {
     val past = data.reservations
         .filter {
             it.status == ReservationStatus.COMPLETED ||
-                (it.status == ReservationStatus.ACTIVE && it.checkOut.isBefore(today))
+                    (it.status == ReservationStatus.ACTIVE && it.checkOut.isBefore(today))
         }
         .map { it.toCard() }
     val waiting = data.entries

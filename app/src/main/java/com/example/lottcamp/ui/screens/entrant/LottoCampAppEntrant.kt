@@ -1,5 +1,8 @@
 package com.example.lottcamp.ui.screens.entrant
 
+import android.os.Build
+import android.provider.Settings
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -12,9 +15,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -25,8 +30,28 @@ import com.example.lottcamp.repository.EntrantRepository
 import com.example.lottcamp.ui.components.AppNavBar
 import com.example.lottcamp.ui.components.AppNavItem
 
+/**
+ * Root composable for the entrant experience, managing bottom navigation and screen routing.
+ *
+ * Resolves the current entrant's identifier once at the top level and passes it down to child
+ * destinations.
+ *
+ * @param data Repository providing entrant, reservation, and lottery operations.
+ * @param testEntrantId Optional entrant ID override for testing; when null, the device's
+ *   [android.provider.Settings.Secure.ANDROID_ID] is used.
+ */
 @Composable
-fun LottoCampAppEntrant(data: EntrantRepository = EntrantRepository()) {
+fun LottoCampAppEntrant(
+    data: EntrantRepository = EntrantRepository(),
+    testEntrantId: String? = "entrant1",
+) {
+    val context = LocalContext.current
+    val entrantId = remember(testEntrantId) {
+        testEntrantId
+            ?: Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+            ?: ""
+    }
+
     val navController = rememberNavController()
     val searchViewModel: SearchViewModel = viewModel()
 
@@ -77,7 +102,7 @@ fun LottoCampAppEntrant(data: EntrantRepository = EntrantRepository()) {
     ) { innerPadding ->
         NavHost(navController = navController, startDestination = "entrant-campsite-search-screen") {
             composable("entrant-campsite-search-screen") { EntrantCampsiteSearchScreen(navController, Modifier.padding(innerPadding), searchViewModel) }
-            composable("entrant-bookings-screen") { EntrantBookingsScreen(navController, Modifier.padding(innerPadding), data) }
+            composable("entrant-bookings-screen") { EntrantBookingsScreen(navController, entrantId, Modifier.padding(innerPadding), data) }
             composable("entrant-messages-screen") { EntrantMessagesScreen(navController, Modifier.padding(innerPadding)) }
             composable("entrant-profile-screen") { EntrantProfileScreen(navController, Modifier.padding(innerPadding)) }
             composable(
@@ -87,7 +112,7 @@ fun LottoCampAppEntrant(data: EntrantRepository = EntrantRepository()) {
                 )
             ) { backStackEntry ->
                 val campsiteId = backStackEntry.arguments?.getString("campsiteId") ?: ""
-                EntrantCampsiteDetailsScreen(navController, Modifier.padding(innerPadding), campsiteId)
+                EntrantCampsiteDetailsScreen(navController, campsiteId, entrantId, Modifier.padding(innerPadding))
             }
             composable("entrant-campsite-filter-screen") { EntrantCampsiteFilterScreen(navController, Modifier.padding(innerPadding), searchViewModel) }
             composable(
@@ -118,5 +143,4 @@ fun LottoCampAppEntrant(data: EntrantRepository = EntrantRepository()) {
             }
         }
     }
-
 }
