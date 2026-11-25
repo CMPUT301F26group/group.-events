@@ -13,7 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.ui.screens.admin.AdminNavGraph
-import com.example.lottcamp.ui.screens.entrant.LottoCampAppEntrant
+import com.example.lottcamp.ui.screens.entrant.EntrantNavGraph
 import com.example.lottcamp.ui.screens.owner.OwnerNavGraph
 import com.example.lottcamp.ui.theme.LottCampTheme
 
@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
                 var isAdmin by remember { mutableStateOf<Boolean?>(null) }
                 var actingAsOwner by remember { mutableStateOf(false) } // owner addition
                 LaunchedEffect(Unit) {
-                    isAdmin = true
+                    isAdmin = false
                 }
                 if (actingAsOwner) { // owner addition
                     OwnerNavGraph(
@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
                 } else {
                     when (isAdmin) {
                         true -> AdminNavGraph()
-                        false -> LottoCampAppEntrant()
+                        false -> EntrantNavGraph()
                         null -> {}
                     }
                 }

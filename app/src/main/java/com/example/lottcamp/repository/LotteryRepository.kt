@@ -2,13 +2,12 @@ package com.example.lottcamp.repository
 
 import com.example.lottcamp.data.CampsiteDoc
 import com.example.lottcamp.data.LotteryDoc
-
 import com.example.lottcamp.domain.Campsite
 import com.example.lottcamp.domain.Lottery
+import com.google.firebase.Firebase
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
-import com.google.firebase.Firebase
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -32,6 +31,22 @@ class LotteryRepository(
         val docs = snapshot.documents.mapNotNull { it.toObject(LotteryDoc::class.java) }
 
         // Gather all unique campsite IDs across all lotteries
+        val allCampsiteIds = docs.flatMap { it.campsiteIds }.distinct()
+        val campsiteMap = fetchCampsitesByIds(allCampsiteIds).associateBy { it.id }
+
+        return docs.map { doc ->
+            val campsites = doc.campsiteIds.mapNotNull { campsiteMap[it] }
+            doc.toDomain(campsites)
+        }
+    }
+
+    suspend fun getLotteriesForCampsite(campsiteId: String): List<Lottery> {
+        val snapshot = collection
+            .whereArrayContains("campsiteIds", campsiteId)
+            .get()
+            .await()
+        val docs = snapshot.documents.mapNotNull { it.toObject(LotteryDoc::class.java) }
+
         val allCampsiteIds = docs.flatMap { it.campsiteIds }.distinct()
         val campsiteMap = fetchCampsitesByIds(allCampsiteIds).associateBy { it.id }
 
