@@ -22,8 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.example.lottcamp.controller.EntrantSearchController
+import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.repository.ImageRepository
 import com.example.lottcamp.ui.components.AppFilterTag
+import com.example.lottcamp.ui.components.AppHeader
 import com.example.lottcamp.ui.components.AppIconButton
 import com.example.lottcamp.ui.components.AppListingCard
 import com.example.lottcamp.ui.components.AppSearchBar
@@ -43,24 +45,29 @@ object EntrantSearchTestTags {
 }
 
 /**
- * Displays the entrant campsite search screen backed by [EntrantSearchController].
+ * Displays the entrant campsite search screen backed by [EntrantSearchController], under the app header.
  *
  * @param controller Controller managing search query, filters, and matching campsites.
  * @param modifier Modifier applied to the root column.
+ * @param roles Roles the user can switch to from the header. Empty hides the switcher.
+ * @param onRoleSelected Called with the role picked in the header.
  */
 @Composable
 fun EntrantCampsiteSearchScreen(
     controller: EntrantSearchController,
     modifier: Modifier = Modifier,
+    roles: List<UserRole> = emptyList(),
+    onRoleSelected: (UserRole) -> Unit = {},
 ) {
     val imageRepo = remember { ImageRepository() }
     val currentFilter = controller.filter
     val displayedResults = controller.displayedResults
 
     Column(
-        modifier = modifier.padding(horizontal = 16.dp),
+        modifier = modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        AppHeader(UserRole.ENTRANT, roles, onRoleSelected)
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,

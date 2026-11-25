@@ -1,10 +1,6 @@
 package com.example.lottcamp.controller
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import com.example.lottcamp.domain.Campsite
-import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.repository.ImageRepository
 
 /**
@@ -20,9 +16,6 @@ class AdminHomeController(
     private val navigate: (String) -> Unit = {},
 ) {
     val imageRepo: ImageRepository get() = admin.imageRepo
-    /** Role the admin is currently acting as. */
-    var role by mutableStateOf(UserRole.ADMIN)
-        private set
 
     val userCount get() = admin.users.size
     val imageCount get() = admin.images.size
@@ -33,11 +26,6 @@ class AdminHomeController(
 
     // TODO: hook up once the global search is designed.
     fun onSearch(query: String) {}
-
-    // TODO: switch to the entrant/owner screens once they are wired up.
-    fun onRoleSelected(role: UserRole) {
-        this.role = role
-    }
 
     fun onBrowseCampsitesClick() = navigate(AdminRoutes.CAMPSITES)
     fun onUsersClick() = navigate(AdminRoutes.USERS)

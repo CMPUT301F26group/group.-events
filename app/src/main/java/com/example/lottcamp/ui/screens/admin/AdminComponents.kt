@@ -89,7 +89,7 @@ fun AdminListPage(
 }
 
 /**
- * Labelled group of rows on an [AdminDetailPage].
+ * Labeled group of rows on an [AdminDetailPage].
  *
  * @property title Heading above the rows. Null shows the rows without one.
  * @property rows Label to value pairs.

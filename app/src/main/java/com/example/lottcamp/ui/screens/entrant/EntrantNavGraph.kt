@@ -32,6 +32,7 @@ import com.example.lottcamp.controller.EntrantBookingsController
 import com.example.lottcamp.controller.EntrantCampsiteDetailsController
 import com.example.lottcamp.controller.EntrantRoutes
 import com.example.lottcamp.controller.EntrantSearchController
+import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.repository.EntrantRepository
 import com.example.lottcamp.ui.components.AppNavBar
 import com.example.lottcamp.ui.components.AppNavItem
@@ -47,6 +48,8 @@ import com.example.lottcamp.ui.components.AppNavItem
  * @param data Repository providing entrant reservations, campsites, and lottery entries.
  * @param testEntrantId Optional override for testing; when null, the device's
  *   [Settings.Secure.ANDROID_ID] is used.
+ * @param roles Roles the user can switch to from the search screen header. Empty hides the switcher.
+ * @param onRoleSelected Called with the role picked in the header.
  */
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -54,6 +57,8 @@ fun EntrantNavGraph(
     modifier: Modifier = Modifier,
     data: EntrantRepository = EntrantRepository(),
     testEntrantId: String? = "entrant1",
+    roles: List<UserRole> = emptyList(),
+    onRoleSelected: (UserRole) -> Unit = {},
 ) {
     val context = LocalContext.current
     val entrantId = remember(testEntrantId) {
@@ -167,7 +172,11 @@ fun EntrantNavGraph(
             modifier = Modifier.padding(innerPadding),
         ) {
             composable(EntrantRoutes.SEARCH) {
-                EntrantCampsiteSearchScreen(controller = searchController)
+                EntrantCampsiteSearchScreen(
+                    controller = searchController,
+                    roles = roles,
+                    onRoleSelected = onRoleSelected,
+                )
             }
             composable(EntrantRoutes.FILTER) {
                 EntrantCampsiteFilterScreen(controller = searchController)

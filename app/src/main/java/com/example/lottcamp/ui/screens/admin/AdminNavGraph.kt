@@ -14,7 +14,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -27,6 +26,7 @@ import androidx.navigation.navArgument
 import com.example.lottcamp.controller.AdminController
 import com.example.lottcamp.controller.AdminHomeController
 import com.example.lottcamp.controller.AdminRoutes
+import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.repository.AdminRepository
 import com.example.lottcamp.ui.components.AppNavBar
 import com.example.lottcamp.ui.components.AppNavItem
@@ -37,11 +37,15 @@ import com.example.lottcamp.ui.components.AppNavItem
  *
  * @param modifier Applied to the scaffold around the admin screens.
  * @param data Where the admin data comes from.
+ * @param roles Roles the admin can switch to from the home screen header.
+ * @param onRoleSelected Called with the role picked in the header.
  */
 @Composable
 fun AdminNavGraph(
     modifier: Modifier = Modifier,
     data: AdminRepository = AdminRepository(),
+    roles: List<UserRole> = emptyList(),
+    onRoleSelected: (UserRole) -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     val controller = remember { AdminController(data, scope) }
@@ -105,7 +109,11 @@ fun AdminNavGraph(
     ) { innerPadding ->
         NavHost(navController, startDestination = AdminRoutes.HOME, modifier = Modifier.padding(innerPadding)) {
             composable(AdminRoutes.HOME) {
-                AdminHomeScreen(controller = remember { AdminHomeController(controller, go) })
+                AdminHomeScreen(
+                    controller = remember { AdminHomeController(controller, go) },
+                    roles = roles,
+                    onRoleSelected = onRoleSelected,
+                )
             }
             composable(AdminRoutes.USERS) {
                 AdminUsersScreen(controller, back) { go(AdminRoutes.user(it.id)) }

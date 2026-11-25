@@ -10,6 +10,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.ui.screens.admin.AdminNavGraph
@@ -26,24 +27,26 @@ class MainActivity : ComponentActivity() {
             LottCampTheme {
                 // Admins are the users whose Android ID is in the admins collection
                 val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
-                var isAdmin by remember { mutableStateOf<Boolean?>(null) }
-                var actingAsOwner by remember { mutableStateOf(false) } // owner addition
+                var availableRoles by remember { mutableStateOf<List<UserRole>>(emptyList()) }
+                var activeRole by rememberSaveable { mutableStateOf<UserRole?>(null) }
+
                 LaunchedEffect(Unit) {
-                    isAdmin = false
-                }
-                if (actingAsOwner) { // owner addition
-                    OwnerNavGraph(
-                        ownerId = androidId,
-                        availableRoles = if (isAdmin == true) UserRole.entries
-                        else listOf(UserRole.ENTRANT, UserRole.OWNER),
-                        onRoleChange = { actingAsOwner = false },
-                    )
-                } else {
-                    when (isAdmin) {
-                        true -> AdminNavGraph()
-                        false -> EntrantNavGraph()
-                        null -> {}
+                    val isAdmin = true // AdminRepository().isAdmin(androidId)
+                    availableRoles = if (isAdmin) UserRole.entries else listOf(UserRole.ENTRANT, UserRole.OWNER)
+                    if (activeRole == null) {
+                        activeRole = if (isAdmin) UserRole.ADMIN else UserRole.ENTRANT
                     }
+                }
+
+                when (activeRole) {
+                    UserRole.ADMIN -> AdminNavGraph(roles = availableRoles, onRoleSelected = { activeRole = it })
+                    UserRole.ENTRANT -> EntrantNavGraph(roles = availableRoles, onRoleSelected = { activeRole = it })
+                    UserRole.OWNER -> OwnerNavGraph(
+                        ownerId = androidId,
+                        availableRoles = availableRoles,
+                        onRoleChange = { activeRole = it },
+                    )
+                    null -> {}
                 }
             }
         }

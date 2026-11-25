@@ -9,9 +9,11 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.repository.SampleAdminRepository
 import com.example.lottcamp.ui.screens.admin.AdminNavGraph
 import com.example.lottcamp.ui.theme.LottCampTheme
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -22,9 +24,15 @@ class AdminScreensTest {
     @get:Rule
     val rule = createComposeRule()
 
+    private var pickedRole: UserRole? = null
+
     @Before
     fun setUp() {
-        rule.setContent { LottCampTheme { AdminNavGraph(data = SampleAdminRepository()) } }
+        rule.setContent {
+            LottCampTheme {
+                AdminNavGraph(data = SampleAdminRepository(), roles = listOf(UserRole.ADMIN, UserRole.ENTRANT)) { pickedRole = it }
+            }
+        }
     }
 
     private fun click(text: String) = rule.onAllNodesWithText(text).onFirst().performClick()
@@ -39,10 +47,10 @@ class AdminScreensTest {
     }
 
     @Test
-    fun home_roleMenuSwitchesRole() {
+    fun home_roleMenuReportsPickedRole() {
         click("Admin ▾")
-        click("Owner")
-        rule.onNodeWithText("Owner ▾").assertIsDisplayed()
+        click("Entrant")
+        assertEquals(UserRole.ENTRANT, pickedRole)
     }
 
     @Test
