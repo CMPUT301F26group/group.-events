@@ -22,7 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.lottcamp.domain.Campsite
+import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.ui.components.AppFilterTag
+import com.example.lottcamp.ui.components.AppHeader
 import com.example.lottcamp.ui.components.AppIconButton
 import com.example.lottcamp.ui.components.AppListingCard
 import com.example.lottcamp.ui.components.AppSearchBar
@@ -34,11 +36,22 @@ import androidx.navigation.NavController
 import com.example.lottcamp.repository.CampsiteRepository
 import com.example.lottcamp.repository.LotteryRepository
 
+/**
+ * Lets an entrant search and filter campsites, under the app header.
+ *
+ * @param navController Used to open the filter and campsite details screens.
+ * @param modifier Applied to the screen's column.
+ * @param viewModel Holds the current search filter.
+ * @param roles Roles the user can switch to from the header. Empty hides the switcher.
+ * @param onRoleSelected Called with the role picked in the header.
+ */
 @Composable
 fun EntrantCampsiteSearchScreen(
     navController: NavController,
     modifier: Modifier,
-    viewModel: SearchViewModel
+    viewModel: SearchViewModel,
+    roles: List<UserRole> = emptyList(),
+    onRoleSelected: (UserRole) -> Unit = {},
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val currentFilter by viewModel.filter.collectAsState()
@@ -51,9 +64,10 @@ fun EntrantCampsiteSearchScreen(
     }
 
     Column(
-        modifier = modifier.padding(horizontal = 16.dp),
+        modifier = modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        AppHeader(UserRole.ENTRANT, roles, onRoleSelected)
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,

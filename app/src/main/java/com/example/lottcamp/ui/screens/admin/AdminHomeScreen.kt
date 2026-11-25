@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,13 +17,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -48,9 +44,8 @@ import com.example.lottcamp.repository.SampleAdminRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import com.example.lottcamp.domain.UserRole
-import com.example.lottcamp.ui.components.AppChip
-import com.example.lottcamp.ui.components.AppChipVariant
 import com.example.lottcamp.ui.components.AppDivider
+import com.example.lottcamp.ui.components.AppHeader
 import com.example.lottcamp.ui.components.AppImagePlaceholder
 import com.example.lottcamp.ui.components.AppListRow
 import com.example.lottcamp.ui.components.AppSearchBar
@@ -62,11 +57,15 @@ import com.example.lottcamp.ui.theme.LottCampTheme
  *
  * @param modifier Applied to the scrolling column.
  * @param controller Supplies the data and handles every tap.
+ * @param roles Roles the admin can switch to from the header.
+ * @param onRoleSelected Called with the role picked in the header.
  */
 @Composable
 fun AdminHomeScreen(
     modifier: Modifier = Modifier,
     controller: AdminHomeController,
+    roles: List<UserRole> = emptyList(),
+    onRoleSelected: (UserRole) -> Unit = {},
 ) {
     var query by remember { mutableStateOf("") }
 
@@ -78,7 +77,7 @@ fun AdminHomeScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Header(controller.role, controller::onRoleSelected)
+        AppHeader(UserRole.ADMIN, roles, onRoleSelected)
 
         AppSearchBar(
             query = query,
@@ -137,47 +136,6 @@ fun AdminHomeScreen(
             LogRow(Icons.Outlined.Notifications, "Notifications", controller::onNotificationsClick)
             AppDivider(spacing = 16.dp)
             LogRow(Icons.Outlined.ChatBubbleOutline, "Owner messages", controller::onOwnerMessagesClick)
-        }
-    }
-}
-
-/** App title with a chip that opens a menu for switching between the admin's roles. */
-@Composable
-private fun Header(role: UserRole, onRoleSelected: (UserRole) -> Unit) {
-    var menuOpen by remember { mutableStateOf(false) }
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .background(MaterialTheme.colorScheme.primary)
-        )
-        Spacer(Modifier.width(12.dp))
-        Text(
-            text = "Campsite App",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(1f),
-        )
-        Box {
-            AppChip(
-                text = "${role.label} ▾",
-                selected = false,
-                onClick = { menuOpen = true },
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                variant = AppChipVariant.Secondary,
-            )
-            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                UserRole.entries.forEach {
-                    DropdownMenuItem(
-                        text = { Text(it.label) },
-                        onClick = {
-                            onRoleSelected(it)
-                            menuOpen = false
-                        },
-                        trailingIcon = { if (it == role) Icon(Icons.Default.Check, contentDescription = "Selected") },
-                    )
-                }
-            }
         }
     }
 }

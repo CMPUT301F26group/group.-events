@@ -10,7 +10,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.ui.screens.admin.AdminNavGraph
 import com.example.lottcamp.ui.screens.entrant.LottoCampAppEntrant
 import com.example.lottcamp.ui.theme.LottCampTheme
@@ -24,14 +26,21 @@ class MainActivity : ComponentActivity() {
             LottCampTheme {
                 // Admins are the users whose Android ID is in the admins collection
                 val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
-                var isAdmin by remember { mutableStateOf<Boolean?>(null) }
+                var availableRoles by remember { mutableStateOf<List<UserRole>>(emptyList()) }
+                var activeRole by rememberSaveable { mutableStateOf<UserRole?>(null) }
+
                 LaunchedEffect(Unit) {
-                    isAdmin = true
+                    val isAdmin = true // AdminRepository().isAdmin(androidId)
+                    availableRoles = if (isAdmin) listOf(UserRole.ADMIN, UserRole.ENTRANT) else emptyList()
+                    if (activeRole == null) {
+                        activeRole = if (isAdmin) UserRole.ADMIN else UserRole.ENTRANT
+                    }
                 }
 
-                when (isAdmin) {
-                    true -> AdminNavGraph()
-                    false -> LottoCampAppEntrant()
+                when (activeRole) {
+                    UserRole.ADMIN -> AdminNavGraph(roles = availableRoles, onRoleSelected = { activeRole = it })
+                    UserRole.ENTRANT -> LottoCampAppEntrant(roles = availableRoles, onRoleSelected = { activeRole = it })
+                    UserRole.OWNER -> { /* owner */ }
                     null -> {}
                 }
             }

@@ -1,6 +1,5 @@
 package com.example.lottcamp.controller
 
-import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.repository.SampleAdminRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -49,12 +48,5 @@ class AdminHomeControllerTest {
             ),
             routes,
         )
-    }
-
-    @Test
-    fun onRoleSelected_updatesRole() {
-        assertEquals(UserRole.ADMIN, controller.role)
-        controller.onRoleSelected(UserRole.OWNER)
-        assertEquals(UserRole.OWNER, controller.role)
     }
 }

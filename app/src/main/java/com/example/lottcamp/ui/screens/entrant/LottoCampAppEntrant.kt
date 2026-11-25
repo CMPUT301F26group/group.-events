@@ -21,11 +21,21 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.ui.components.AppNavBar
 import com.example.lottcamp.ui.components.AppNavItem
 
+/**
+ * Navigation between the entrant screens, starting at campsite search, with a bottom nav bar.
+ *
+ * @param roles Roles the user can switch to from the search screen header. Empty for regular entrants.
+ * @param onRoleSelected Called with the role picked in the header.
+ */
 @Composable
-fun LottoCampAppEntrant() {
+fun LottoCampAppEntrant(
+    roles: List<UserRole> = emptyList(),
+    onRoleSelected: (UserRole) -> Unit = {},
+) {
     val navController = rememberNavController()
     val searchViewModel: SearchViewModel = viewModel()
 
@@ -75,7 +85,9 @@ fun LottoCampAppEntrant() {
         }
     ) { innerPadding ->
         NavHost(navController = navController, startDestination = "entrant-campsite-search-screen") {
-            composable("entrant-campsite-search-screen") { EntrantCampsiteSearchScreen(navController, Modifier.padding(innerPadding), searchViewModel) }
+            composable("entrant-campsite-search-screen") {
+                EntrantCampsiteSearchScreen(navController, Modifier.padding(innerPadding), searchViewModel, roles, onRoleSelected)
+            }
             composable("entrant-bookings-screen") { EntrantBookingsScreen(navController, Modifier.padding(innerPadding)) }
             composable("entrant-messages-screen") { EntrantMessagesScreen(navController, Modifier.padding(innerPadding)) }
             composable("entrant-profile-screen") { EntrantProfileScreen(navController, Modifier.padding(innerPadding)) }
