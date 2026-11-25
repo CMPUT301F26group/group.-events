@@ -36,15 +36,15 @@ data class UserProfile(
  * @property id Unique review ID
  * @property campsiteId Campsite the review belongs to
  * @property authorName Name of the user who wrote the review
- * @property rating Star rating from 1 to 5
- * @property text Written review
+ * @property rating Star rating from 1.0 to 5.0
+ * @property comment Written review
  */
 data class Review(
     val id: String,
     val campsiteId: String,
     val authorName: String,
-    val rating: Int,
-    val text: String,
+    val rating: Double,
+    val comment: String,
 )
 
 /**

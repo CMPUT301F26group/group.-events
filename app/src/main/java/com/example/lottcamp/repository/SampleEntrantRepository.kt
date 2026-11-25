@@ -214,6 +214,16 @@ open class SampleEntrantRepository : EntrantRepository() {
     override suspend fun getCampsite(campsiteId: String): Campsite? =
         campsites.firstOrNull { it.id == campsiteId }
 
+    override suspend fun submitReview(
+        campsiteId: String,
+        entrantId: String,
+        rating: Double,
+        comment: String,
+    ) {
+        val index = campsites.indexOfFirst { it.id == campsiteId }
+        if (index != -1) campsites[index] = campsites[index].addRating(rating)
+    }
+
     override suspend fun getReservations(entrantId: String): List<Reservation> =
         reservations.toList()
 

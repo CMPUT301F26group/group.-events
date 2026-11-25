@@ -217,7 +217,7 @@ fun EntrantNavGraph(
                 arguments = listOf(navArgument("campsiteId") { type = NavType.StringType }),
             ) { entry ->
                 val campsiteId = getArg(entry, "campsiteId")
-                EntrantCampsiteRatingScreen(navController, Modifier, campsiteId, repository)
+                EntrantCampsiteRatingScreen(navController, Modifier, campsiteId, entrantId, repository)
             }
             composable(
                 route = EntrantRoutes.RATING_SUBMITTED,

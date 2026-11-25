@@ -27,15 +27,15 @@ open class SampleAdminRepository : AdminRepository() {
     )
 
     val campsites = mutableListOf(
-        Campsite("CAMP-001", "USR-0871", "Pine Ridge Camp", "Hinton, AB", maxOccupancy = 6, pricePerNight = 85.0, imageId = "https://photo.invalid/pine.png"),
+        Campsite("CAMP-001", "USR-0871", "Pine Ridge Camp", "Hinton, AB", maxOccupancy = 6, pricePerNight = 85.0, imageId = "https://photo.invalid/pine.png", ratingSum = 10.0, ratingCount = 3),
         Campsite("CAMP-002", "USR-0871", "Bow Valley Retreat", "Canmore, AB", maxOccupancy = 4, pricePerNight = 120.0, imageId = "https://photo.invalid/bow.png"),
         Campsite("CAMP-003", "USR-0932", "Meadow Ridge", "Banff, AB", maxOccupancy = 8, pricePerNight = 95.0),
     )
 
     val reviews = mutableListOf(
-        Review("REV-1", "CAMP-001", "Alex Morgan", 5, "Great spot by the river. The cookhouse was spotless."),
-        Review("REV-2", "CAMP-001", "Sam Patel", 4, "Quiet and well kept. Gravel parking is a little tight."),
-        Review("REV-3", "CAMP-001", "Robin Lee", 1, "This review contains language that breaks app policy."),
+        Review("REV-1", "CAMP-001", "Alex Morgan", 5.0, "Great spot by the river. The cookhouse was spotless."),
+        Review("REV-2", "CAMP-001", "Sam Patel", 4.0, "Quiet and well kept. Gravel parking is a little tight."),
+        Review("REV-3", "CAMP-001", "Robin Lee", 1.0, "This review contains language that breaks app policy."),
     )
 
     private val notifications = listOf(

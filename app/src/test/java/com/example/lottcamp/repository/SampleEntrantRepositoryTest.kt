@@ -30,6 +30,17 @@ class SampleEntrantRepositoryTest {
     }
 
     @Test
+    fun submitReview_addsTheRatingToTheCampsiteAverage() = runBlocking {
+        val before = data.getCampsite("CAMP-001")!!
+
+        data.submitReview("CAMP-001", SampleEntrantRepository.ENTRANT_ID, 5.0, "Loved it")
+
+        val after = data.getCampsite("CAMP-001")!!
+        assertEquals(before.ratingSum + 5.0, after.ratingSum, 0.001)
+        assertEquals(before.ratingCount + 1, after.ratingCount)
+    }
+
+    @Test
     fun unknownCampsite_returnsNull() = runBlocking {
         assertNull(data.getCampsite("missing"))
     }

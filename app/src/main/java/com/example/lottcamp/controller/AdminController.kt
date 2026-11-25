@@ -210,6 +210,16 @@ class AdminController(private val data: AdminRepository, private val scope: Coro
         runInBackground("Couldn't remove the review") {
             data.removeReview(review)
             reviews.removeAll { it.id == review.id }
+
+            // Keep the campsite shown on the admin screens in sync with the new average
+            val index = campsites.indexOfFirst { it.id == review.campsiteId }
+            if (index != -1) {
+                val campsite = campsites[index]
+                campsites[index] = campsite.copy(
+                    ratingSum = (campsite.ratingSum - review.rating).coerceAtLeast(0.0),
+                    ratingCount = (campsite.ratingCount - 1).coerceAtLeast(0),
+                )
+            }
         }
     }
 

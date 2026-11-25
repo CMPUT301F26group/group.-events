@@ -80,7 +80,7 @@ open class AdminRepository(
     /** Every campsite review. */
     open suspend fun getReviews(): List<Review> {
         val docs = reviews.get().await().toObjects(ReviewDoc::class.java)
-        return docs.map { Review(it.id, it.campsiteId, it.authorName, it.rating, it.text) }
+        return docs.map { Review(it.id, it.campsiteId, it.authorName, it.rating, it.comment) }
     }
 
     /** Every logged notification, newest first. */

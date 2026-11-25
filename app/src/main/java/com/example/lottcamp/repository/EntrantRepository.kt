@@ -2,13 +2,16 @@ package com.example.lottcamp.repository
 
 import com.example.lottcamp.data.EntrantDoc
 import com.example.lottcamp.data.ReservationStatus
+import com.example.lottcamp.data.ReviewDoc
 import com.example.lottcamp.domain.Campsite
 import com.example.lottcamp.domain.Entrant
 import com.example.lottcamp.domain.Lottery
 import com.example.lottcamp.domain.LotteryEntry
 import com.example.lottcamp.domain.Reservation
 import com.google.firebase.Firebase
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldPath
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.channels.awaitClose
@@ -33,6 +36,7 @@ open class EntrantRepository(
 
     private val db by lazy(dbProvider)
     private val entrants by lazy { db.collection("entrants") }
+    private val reviews by lazy { db.collection("reviews") }
     private val campsiteRepo by lazy { CampsiteRepository(db) }
     private val reservationRepo by lazy { ReservationRepository(db) }
     private val lotteryEntryRepo by lazy { LotteryEntryRepository(db) }
@@ -81,6 +85,42 @@ open class EntrantRepository(
     /** The campsite with [campsiteId], or null if it does not exist. */
     open suspend fun getCampsite(campsiteId: String): Campsite? =
         campsiteRepo.getCampsiteById(campsiteId)
+
+    // --- Reviews ---
+
+    /**
+     * Stores [rating] and [comment] as a review of [campsiteId] by [entrantId], and adds the
+     * rating to the campsite's average.
+     *
+     * The rating is saved as a float and the comment as a string. The review and the campsite's
+     * updated `ratingSum` / `ratingCount` are written in one batch, so they stay in sync.
+     */
+    open suspend fun submitReview(
+        campsiteId: String,
+        entrantId: String,
+        rating: Double,
+        comment: String,
+    ) {
+        require(rating in 1.0..5.0) { "Rating must be between 1.0 and 5.0" }
+        val entrant = getEntrantByAndroidId(entrantId)
+        val review = ReviewDoc(
+            campsiteId = campsiteId,
+            authorId = entrantId,
+            authorName = entrant?.name ?: "Anonymous",
+            rating = rating,
+            comment = comment.trim(),
+            createdAt = Timestamp.now(),
+        )
+
+        val batch = db.batch()
+        batch.set(reviews.document(), review)
+        batch.update(
+            db.collection("campsites").document(campsiteId),
+            "ratingSum", FieldValue.increment(rating),
+            "ratingCount", FieldValue.increment(1),
+        )
+        batch.commit().await()
+    }
 
     // --- Reservations ---
 
