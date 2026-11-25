@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.lottcamp.controller.EntrantRoutes
 import com.example.lottcamp.domain.Campsite
 import com.example.lottcamp.repository.EntrantRepository
 import com.example.lottcamp.ui.components.AppButton
@@ -65,12 +66,13 @@ fun EntrantCampsiteRatingScreen(
     campsiteId: String,
     data: EntrantRepository = EntrantRepository(),
 ) {
+    val repository = remember { data }
     var campsite by remember { mutableStateOf<Campsite?>(null) }
     var rating by rememberSaveable { mutableIntStateOf(0) }
     var review by rememberSaveable { mutableStateOf("") }
 
-    LaunchedEffect(campsiteId) {
-        campsite = data.getCampsite(campsiteId)
+    LaunchedEffect(campsiteId, repository) {
+        campsite = repository.getCampsite(campsiteId)
     }
 
     val currentCampsite = campsite
@@ -96,9 +98,8 @@ fun EntrantCampsiteRatingScreen(
         onSubmit = {
             // `rating` and `review` hold the current selection here.
             // TODO: Save the review and update the campsite's rating in Firestore.
-            navController.navigate("entrant-rating-submitted-screen/$campsiteId/$rating") {
-                // Replace the rating form so back returns to the campsite details.
-                popUpTo("entrant-campsite-rating-screen/{campsiteId}") { inclusive = true }
+            navController.navigate(EntrantRoutes.ratingSubmitted(campsiteId, rating)) {
+                popUpTo(EntrantRoutes.RATE_CAMPSITE) { inclusive = true }
             }
         },
     )

@@ -1,6 +1,8 @@
 package com.example.lottcamp.ui.screens.entrant
 
-import android.provider.Settings
+import android.content.ContentValues.TAG
+import android.util.Log
+import android.util.Log.i
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -19,25 +21,22 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import com.example.lottcamp.controller.BookingCard
+import com.example.lottcamp.controller.EntrantBookingsController
+import com.example.lottcamp.controller.WaitingListCard
 import com.example.lottcamp.data.EntryStatus
 import com.example.lottcamp.data.ReservationStatus
 import com.example.lottcamp.domain.Reservation
-import com.example.lottcamp.repository.EntrantRepository
 import com.example.lottcamp.repository.SampleEntrantRepository
 import com.example.lottcamp.ui.components.AppButton
 import com.example.lottcamp.ui.components.AppButtonVariant
@@ -50,156 +49,52 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlinx.coroutines.launch
-
-/** Reservation data ready to render in the active or past tab. */
-private data class BookingCard(
-    val reservationId: String,
-    val campsiteId: String,
-    val campsiteName: String,
-    val campsiteLocation: String,
-    val checkIn: LocalDate,
-    val checkOut: LocalDate,
-)
-
-/** Lottery entry data ready to render in the waiting lists tab. */
-private data class WaitingListCard(
-    val entryId: String,
-    val campsiteName: String,
-    val closesOn: Instant,
-    val entrantCount: Int,
-)
 
 /**
- * Entrant bookings: active reservations, past reservations and waiting lists.
+ * Entrant bookings screen displaying active reservations, past stays, and waiting lists
+ * backed by [EntrantBookingsController].
  *
- * Reservations and lottery entries are loaded for the current Android ID.
- * Cancelling a reservation or leaving a waiting list asks for confirmation
- * first. Past reservations offer a button that opens the rating screen.
- *
- * @param navController Used to open the rating screen for a past stay.
- * @param modifier Applied to the whole screen.
- * @param data Where the bookings come from. Tests and previews pass
- *   [com.example.lottcamp.repository.SampleEntrantRepository].
+ * @param controller Controller owning bookings, waiting lists, and confirmation actions.
+ * @param modifier Modifier applied to the screen.
  */
 @Composable
 fun EntrantBookingsScreen(
-    navController: NavController,
-    modifier: Modifier,
-    data: EntrantRepository = EntrantRepository(),
+    controller: EntrantBookingsController,
+    modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-
-    val androidId = remember {
-        Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID) ?: ""
-    }
-
-    var activeBookings by remember { mutableStateOf<List<BookingCard>>(emptyList()) }
-    var pastBookings by remember { mutableStateOf<List<BookingCard>>(emptyList()) }
-    var waitingLists by remember { mutableStateOf<List<WaitingListCard>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var bookingToCancel by remember { mutableStateOf<BookingCard?>(null) }
-    var waitingToLeave by remember { mutableStateOf<WaitingListCard?>(null) }
-
-    LaunchedEffect(androidId) {
-        isLoading = true
-        try {
-            val campsites = data.getCampsites().associateBy { it.id }
-            val today = LocalDate.now()
-
-            val reservations = data.getReservations(androidId)
-            val (past, active) = reservations.partition { reservation ->
-                reservation.status == ReservationStatus.COMPLETED ||
-                    (reservation.status == ReservationStatus.ACTIVE &&
-                        reservation.checkOut.isBefore(today))
-            }
-
-            fun Reservation.toCard(): BookingCard {
-                val campsite = campsites[campsiteId]
-                return BookingCard(
-                    reservationId = id,
-                    campsiteId = campsiteId,
-                    campsiteName = campsite?.name ?: "Campsite",
-                    campsiteLocation = campsite?.locationName ?: "",
-                    checkIn = checkIn,
-                    checkOut = checkOut,
-                )
-            }
-
-            activeBookings = active
-                .filter { it.status == ReservationStatus.ACTIVE }
-                .map { it.toCard() }
-            pastBookings = past.map { it.toCard() }
-
-            waitingLists = data.getLotteryEntries(androidId)
-                .filter { it.status == EntryStatus.WAITING }
-                .mapNotNull { entry ->
-                    val lottery = data.getLottery(entry.lotteryId)
-                        ?: return@mapNotNull null
-                    WaitingListCard(
-                        entryId = entry.id,
-                        campsiteName = lottery.campsites.firstOrNull()?.name ?: "Campsite",
-                        closesOn = lottery.registrationEnd,
-                        entrantCount = data.getLotteryEntryCount(lottery.id),
-                    )
-                }
-        } finally {
-            isLoading = false
-        }
-    }
-
     BookingsContent(
-        activeBookings = activeBookings,
-        pastBookings = pastBookings,
-        waitingLists = waitingLists,
-        isLoading = isLoading,
+        activeBookings = controller.activeBookings,
+        pastBookings = controller.pastBookings,
+        waitingLists = controller.waitingLists,
+        isLoading = controller.isLoading,
         modifier = modifier,
-        onCancelBooking = { bookingToCancel = it },
-        onRateCampsite = { booking ->
-            navController.navigate("entrant-campsite-rating-screen/${booking.campsiteId}")
-        },
-        onLeaveWaitingList = { waitingToLeave = it },
+        onCancelBooking = controller::onCancelBookingClick,
+        onRateCampsite = controller::onRateCampsiteClick,
+        onLeaveWaitingList = controller::onLeaveWaitingListClick,
     )
 
-    bookingToCancel?.let { booking ->
+    controller.bookingToCancel?.let { booking ->
         AppDialog(
             title = "Cancel booking?",
             message = "Your reservation at ${booking.campsiteName} " +
-                "(${formatDateRange(booking.checkIn, booking.checkOut, includeYear = false)}) " +
-                "will be cancelled and refunded.",
+                    "(${formatDateRange(booking.checkIn, booking.checkOut, includeYear = false)}) " +
+                    "will be cancelled and refunded.",
             dismissText = "Keep it",
-            onDismiss = { bookingToCancel = null },
+            onDismiss = controller::dismissCancelDialog,
             confirmText = "Cancel booking",
-            onConfirm = {
-                bookingToCancel = null
-                scope.launch {
-                    data.cancelReservation(booking.reservationId)
-                    activeBookings = activeBookings.filterNot {
-                        it.reservationId == booking.reservationId
-                    }
-                }
-            },
+            onConfirm = controller::confirmCancelBooking,
         )
     }
 
-    waitingToLeave?.let { waiting ->
+    controller.waitingToLeave?.let { waiting ->
         AppDialog(
             title = "Leave waiting list?",
             message = "You'll leave the waiting list for ${waiting.campsiteName}. " +
-                "You can rejoin while registration is open.",
+                    "You can rejoin while registration is open.",
             dismissText = "Stay",
-            onDismiss = { waitingToLeave = null },
+            onDismiss = controller::dismissLeaveDialog,
             confirmText = "Leave waiting list",
-            onConfirm = {
-                waitingToLeave = null
-                scope.launch {
-                    data.leaveWaitingList(waiting.entryId)
-                    waitingLists = waitingLists.filterNot {
-                        it.entryId == waiting.entryId
-                    }
-                }
-            },
+            onConfirm = controller::confirmLeaveWaitingList,
         )
     }
 }
@@ -255,7 +150,6 @@ private fun BookingsContent(
         )
 
         Spacer(Modifier.height(16.dp))
-
         if (isLoading) {
             Box(
                 modifier = Modifier.fillMaxWidth().weight(1f),
@@ -509,7 +403,7 @@ private fun BookingsPreview(initialTab: Int) {
     val past = data.reservations
         .filter {
             it.status == ReservationStatus.COMPLETED ||
-                (it.status == ReservationStatus.ACTIVE && it.checkOut.isBefore(today))
+                    (it.status == ReservationStatus.ACTIVE && it.checkOut.isBefore(today))
         }
         .map { it.toCard() }
     val waiting = data.entries
@@ -531,6 +425,7 @@ private fun BookingsPreview(initialTab: Int) {
             activeBookings = active,
             pastBookings = past,
             waitingLists = waiting,
+            isLoading = true,
             initialTab = initialTab,
         )
     }

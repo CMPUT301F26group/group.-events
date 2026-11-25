@@ -2,151 +2,142 @@ package com.example.lottcamp.ui.screens.entrant
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.example.lottcamp.repository.CampsiteRepository
+import com.example.lottcamp.controller.EntrantSearchController
 import com.example.lottcamp.ui.components.AppBackButton
 import com.example.lottcamp.ui.components.AppButton
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
+import com.example.lottcamp.ui.components.AppButtonVariant
 
-private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-
-private fun String.toLocalDateOrNull(): LocalDate? = try {
-    LocalDate.parse(this, formatter)
-} catch (e: DateTimeParseException) {
-    null
+object EntrantFilterTestTags {
+    const val BACK_BUTTON = "filter_back_button"
+    const val TITLE_TEXT = "filter_title_text"
+    const val LOCATION_INPUT = "filter_location_input"
+    const val MIN_GUESTS_INPUT = "filter_min_guests_input"
+    const val MAX_PRICE_INPUT = "filter_max_price_input"
+    const val CLEAR_BUTTON = "filter_clear_button"
+    const val APPLY_BUTTON = "filter_apply_button"
 }
 
+/**
+ * Filter screen allowing an entrant to refine campsite search criteria through
+ * [EntrantSearchController].
+ *
+ * @param controller Shared search controller holding and applying filter state.
+ * @param modifier Modifier applied to the root container.
+ */
 @Composable
-fun EntrantCampsiteFilterScreen(navController: NavController, modifier: Modifier = Modifier, viewModel: SearchViewModel) {
-    var location by remember { mutableStateOf("") }
-    var startDate by remember { mutableStateOf("") }
-    var endDate by remember { mutableStateOf("") }
-    var guests by remember { mutableStateOf("") }
-    var selectedTags by remember { mutableStateOf(setOf<String>()) }
-    val campsiteRepo = CampsiteRepository()
-    var allTags by remember { mutableStateOf(emptyList<String>()) }
-
-    LaunchedEffect(Unit) {
-        allTags = campsiteRepo.getAllTags()
+fun EntrantCampsiteFilterScreen(
+    controller: EntrantSearchController,
+    modifier: Modifier = Modifier,
+) {
+    val current = controller.filter
+    var locationText by remember(current.locationName) { mutableStateOf(current.locationName ?: "") }
+    var guestsText by remember(current.minOccupancy) { mutableStateOf(current.minOccupancy?.toString() ?: "") }
+    var maxPriceText by remember(current.maxPricePerNight) {
+        mutableStateOf(current.maxPricePerNight?.toString() ?: "")
     }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        AppBackButton("Back to Search", onClick = { navController.navigate("entrant-campsite-search-screen") })
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            OutlinedTextField(
-                value = location,
-                onValueChange = { location = it },
-                label = { Text("Location") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = startDate,
-                onValueChange = { startDate = it },
-                label = { Text("Start date (YYYY-MM-DD)") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = endDate,
-                onValueChange = { endDate = it },
-                label = { Text("End date (YYYY-MM-DD)") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = guests,
-                onValueChange = { guests = it.filter(Char::isDigit) },
-                label = { Text("Number of guests") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Text("Tags", style = MaterialTheme.typography.titleSmall)
-
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                allTags.forEach { tag ->
-                    FilterChip(
-                        selected = tag in selectedTags,
-                        onClick = {
-                            selectedTags = if (tag in selectedTags)
-                                selectedTags - tag
-                            else
-                                selectedTags + tag
-                        },
-                        label = { Text(tag) }
-                    )
-                }
-            }
-        }
-
-        AppButton(
-            "Show matching campsites",
-            onClick = {
-                viewModel.setFilter(
-                    CampsiteFilter(
-                        name = location.ifBlank { null },
-                        locationName = location.ifBlank { null },
-                        minOccupancy = guests.toIntOrNull(),
-                        startDate = startDate.toLocalDateOrNull(),
-                        endDate = endDate.toLocalDateOrNull(),
-                        tags = selectedTags.toList()
-                    )
-                )
-                navController.navigate("entrant-campsite-search-screen")
-            },
-            modifier.fillMaxWidth()
+        AppBackButton(
+            label = "Back",
+            onClick = controller::onBackClick,
+            modifier = Modifier.testTag(EntrantFilterTestTags.BACK_BUTTON),
         )
 
-        TextButton(
-            onClick = {
-                location = ""; startDate = ""; endDate = ""
-                guests = ""; selectedTags = emptySet()
-            },
-            modifier = Modifier.fillMaxWidth()
+        Text(
+            text = "Filter Campsites",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.testTag(EntrantFilterTestTags.TITLE_TEXT),
+        )
+
+        OutlinedTextField(
+            value = locationText,
+            onValueChange = { locationText = it },
+            label = { Text("Location") },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(EntrantFilterTestTags.LOCATION_INPUT),
+        )
+
+        OutlinedTextField(
+            value = guestsText,
+            onValueChange = { guestsText = it },
+            label = { Text("Minimum guests") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(EntrantFilterTestTags.MIN_GUESTS_INPUT),
+        )
+
+        OutlinedTextField(
+            value = maxPriceText,
+            onValueChange = { maxPriceText = it },
+            label = { Text("Max price per night ($)") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(EntrantFilterTestTags.MAX_PRICE_INPUT),
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Clear filters")
+            AppButton(
+                text = "Clear",
+                onClick = {
+                    locationText = ""
+                    guestsText = ""
+                    maxPriceText = ""
+                    controller.clearFilters()
+                    controller.onBackClick()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(EntrantFilterTestTags.CLEAR_BUTTON),
+                variant = AppButtonVariant.Secondary,
+            )
+
+            AppButton(
+                text = "Apply",
+                onClick = {
+                    controller.updateFilter(
+                        current.copy(
+                            locationName = locationText.trim().ifEmpty { null },
+                            minOccupancy = guestsText.trim().toIntOrNull()?.takeIf { it > 0 },
+                            maxPricePerNight = maxPriceText.trim().toDoubleOrNull()?.takeIf { it >= 0.0 },
+                        )
+                    )
+                    controller.onBackClick()
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(EntrantFilterTestTags.APPLY_BUTTON),
+            )
         }
     }
 }

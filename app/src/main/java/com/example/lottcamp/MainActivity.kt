@@ -14,7 +14,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.ui.screens.admin.AdminNavGraph
-import com.example.lottcamp.ui.screens.entrant.LottoCampAppEntrant
+import com.example.lottcamp.ui.screens.entrant.EntrantNavGraph
 import com.example.lottcamp.ui.screens.owner.OwnerNavGraph
 import com.example.lottcamp.ui.theme.LottCampTheme
 
@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
 
                 when (activeRole) {
                     UserRole.ADMIN -> AdminNavGraph(roles = availableRoles, onRoleSelected = { activeRole = it })
-                    UserRole.ENTRANT -> LottoCampAppEntrant(roles = availableRoles, onRoleSelected = { activeRole = it })
+                    UserRole.ENTRANT -> EntrantNavGraph(roles = availableRoles, onRoleSelected = { activeRole = it })
                     UserRole.OWNER -> OwnerNavGraph(
                         ownerId = androidId,
                         availableRoles = availableRoles,
