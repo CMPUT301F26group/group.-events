@@ -1,5 +1,6 @@
 package com.example.lottcamp.ui.screens.entrant
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,9 +21,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.lottcamp.controller.EntrantSearchController
-import com.example.lottcamp.ui.components.AppBackButton
 import com.example.lottcamp.ui.components.AppButton
 import com.example.lottcamp.ui.components.AppButtonVariant
+import com.example.lottcamp.ui.components.AppTopBar
 
 object EntrantFilterTestTags {
     const val BACK_BUTTON = "filter_back_button"
@@ -56,88 +57,90 @@ fun EntrantCampsiteFilterScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+            .background(MaterialTheme.colorScheme.background),
     ) {
-        AppBackButton(
-            label = "Back",
-            onClick = controller::onBackClick,
-            modifier = Modifier.testTag(EntrantFilterTestTags.BACK_BUTTON),
+        AppTopBar(
+            title = "Filter campsites",
+            onBack = controller::onBackClick,
+            backButtonModifier = Modifier.testTag(EntrantFilterTestTags.BACK_BUTTON),
+            titleModifier = Modifier.testTag(EntrantFilterTestTags.TITLE_TEXT),
         )
 
-        Text(
-            text = "Filter Campsites",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.testTag(EntrantFilterTestTags.TITLE_TEXT),
-        )
-
-        OutlinedTextField(
-            value = locationText,
-            onValueChange = { locationText = it },
-            label = { Text("Location") },
-            singleLine = true,
+        Column(
             modifier = Modifier
+                .weight(1f)
                 .fillMaxWidth()
-                .testTag(EntrantFilterTestTags.LOCATION_INPUT),
-        )
-
-        OutlinedTextField(
-            value = guestsText,
-            onValueChange = { guestsText = it },
-            label = { Text("Minimum guests") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag(EntrantFilterTestTags.MIN_GUESTS_INPUT),
-        )
-
-        OutlinedTextField(
-            value = maxPriceText,
-            onValueChange = { maxPriceText = it },
-            label = { Text("Max price per night ($)") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag(EntrantFilterTestTags.MAX_PRICE_INPUT),
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            AppButton(
-                text = "Clear",
-                onClick = {
-                    locationText = ""
-                    guestsText = ""
-                    maxPriceText = ""
-                    controller.clearFilters()
-                    controller.onBackClick()
-                },
+            OutlinedTextField(
+                value = locationText,
+                onValueChange = { locationText = it },
+                label = { Text("Location") },
+                singleLine = true,
                 modifier = Modifier
-                    .weight(1f)
-                    .testTag(EntrantFilterTestTags.CLEAR_BUTTON),
-                variant = AppButtonVariant.Secondary,
+                    .fillMaxWidth()
+                    .testTag(EntrantFilterTestTags.LOCATION_INPUT),
             )
 
-            AppButton(
-                text = "Apply",
-                onClick = {
-                    controller.updateFilter(
-                        current.copy(
-                            locationName = locationText.trim().ifEmpty { null },
-                            minOccupancy = guestsText.trim().toIntOrNull()?.takeIf { it > 0 },
-                            maxPricePerNight = maxPriceText.trim().toDoubleOrNull()?.takeIf { it >= 0.0 },
-                        )
-                    )
-                    controller.onBackClick()
-                },
+            OutlinedTextField(
+                value = guestsText,
+                onValueChange = { guestsText = it },
+                label = { Text("Minimum guests") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier
-                    .weight(1f)
-                    .testTag(EntrantFilterTestTags.APPLY_BUTTON),
+                    .fillMaxWidth()
+                    .testTag(EntrantFilterTestTags.MIN_GUESTS_INPUT),
             )
+
+            OutlinedTextField(
+                value = maxPriceText,
+                onValueChange = { maxPriceText = it },
+                label = { Text("Max price per night ($)") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(EntrantFilterTestTags.MAX_PRICE_INPUT),
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                AppButton(
+                    text = "Clear",
+                    onClick = {
+                        locationText = ""
+                        guestsText = ""
+                        maxPriceText = ""
+                        controller.clearFilters()
+                        controller.onBackClick()
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag(EntrantFilterTestTags.CLEAR_BUTTON),
+                    variant = AppButtonVariant.Secondary,
+                )
+
+                AppButton(
+                    text = "Apply",
+                    onClick = {
+                        controller.updateFilter(
+                            current.copy(
+                                locationName = locationText.trim().ifEmpty { null },
+                                minOccupancy = guestsText.trim().toIntOrNull()?.takeIf { it > 0 },
+                                maxPricePerNight = maxPriceText.trim().toDoubleOrNull()?.takeIf { it >= 0.0 },
+                            )
+                        )
+                        controller.onBackClick()
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag(EntrantFilterTestTags.APPLY_BUTTON),
+                )
+            }
         }
     }
 }

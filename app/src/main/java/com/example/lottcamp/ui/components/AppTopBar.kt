@@ -1,5 +1,6 @@
 package com.example.lottcamp.ui.components
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,17 +22,28 @@ import androidx.compose.ui.unit.dp
  *
  * @param title Screen title.
  * @param onBack Invoked when the back arrow is tapped.
+ * @param modifier Modifier applied to the top bar container.
+ * @param backButtonModifier Modifier applied to the back arrow [IconButton].
+ * @param titleModifier Modifier applied to the title [Text].
  */
 @Composable
-fun AppTopBar(title: String, onBack: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+fun AppTopBar(
+    title: String,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    backButtonModifier: Modifier = Modifier,
+    titleModifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onBack, modifier = backButtonModifier) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            }
+            Text(title, style = MaterialTheme.typography.titleLarge, modifier = titleModifier)
         }
-        Text(title, style = MaterialTheme.typography.titleLarge)
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
     }
-    HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 }
