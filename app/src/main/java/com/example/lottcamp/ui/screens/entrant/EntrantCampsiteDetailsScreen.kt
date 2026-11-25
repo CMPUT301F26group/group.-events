@@ -112,7 +112,7 @@ fun EntrantCampsiteDetailsScreen(
                         modifier = Modifier.testTag(EntrantDetailsTestTags.TITLE_TEXT),
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("${cs.averageRating} ", style = MaterialTheme.typography.bodyMedium)
+                        Text("%.1f ".format(cs.averageRating), style = MaterialTheme.typography.bodyMedium)
                         AppRatingBar(cs.averageRating.toFloat())
                         Text(
                             " (${cs.ratingCount} reviews)",

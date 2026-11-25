@@ -47,6 +47,7 @@ import com.example.lottcamp.ui.components.AppSectionTitle
 import com.example.lottcamp.ui.components.AppTopBar
 import com.example.lottcamp.ui.theme.LottCampTheme
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 /**
  * Lets an entrant rate a campsite and optionally leave a written review.
@@ -77,9 +78,21 @@ fun EntrantCampsiteRatingScreen(
     var review by rememberSaveable { mutableStateOf("") }
     var submitting by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var isEditing by remember { mutableStateOf(false) }
 
-    LaunchedEffect(campsiteId, repository) {
-        campsite = repository.getCampsite(campsiteId)
+    LaunchedEffect(campsiteId, entrantId, repository) {
+        val loadedCampsite = repository.getCampsite(campsiteId)
+        val existing = try {
+            repository.getReview(campsiteId, entrantId)
+        } catch (e: Exception) {
+            null
+        }
+        isEditing = existing != null
+        if (existing != null) {
+            rating = existing.rating.roundToInt()
+            review = existing.comment
+        }
+        campsite = loadedCampsite
     }
 
     val currentCampsite = campsite
@@ -102,6 +115,7 @@ fun EntrantCampsiteRatingScreen(
         onReviewChange = { review = it },
         submitting = submitting,
         error = error,
+        isEditing = isEditing,
         modifier = modifier,
         onBack = { navController.popBackStack() },
         onSubmit = {
@@ -137,6 +151,7 @@ fun EntrantCampsiteRatingScreen(
  * @param onReviewChange Called with the new review text on every edit.
  * @param submitting Whether the review is currently being uploaded.
  * @param error Message shown when the last upload failed, or null.
+ * @param isEditing Whether the entrant is changing a review they already left.
  * @param modifier Applied to the whole screen.
  * @param onBack Invoked when the back arrow is tapped.
  * @param onSubmit Invoked when the submit button is tapped.
@@ -151,6 +166,7 @@ fun RateCampsiteContent(
     onReviewChange: (String) -> Unit,
     submitting: Boolean = false,
     error: String? = null,
+    isEditing: Boolean = false,
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
     onSubmit: () -> Unit = {},
@@ -160,7 +176,7 @@ fun RateCampsiteContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
-        AppTopBar("Rate a campsite", onBack)
+        AppTopBar(if (isEditing) "Edit review" else "Rate a campsite", onBack)
 
         Column(
             modifier = Modifier
@@ -239,7 +255,11 @@ fun RateCampsiteContent(
         }
 
         AppButton(
-            text = if (submitting) "Submitting..." else "Submit rating",
+            text = when {
+                submitting -> "Submitting..."
+                isEditing -> "Update review"
+                else -> "Submit rating"
+            },
             onClick = onSubmit,
             modifier = Modifier
                 .fillMaxWidth()

@@ -2,6 +2,7 @@ package com.example.lottcamp.repository
 
 import com.example.lottcamp.data.EntryStatus
 import com.example.lottcamp.data.ReservationStatus
+import com.example.lottcamp.data.ReviewDoc
 import com.example.lottcamp.domain.Campsite
 import com.example.lottcamp.domain.Entrant
 import com.example.lottcamp.domain.Lottery
@@ -191,6 +192,9 @@ open class SampleEntrantRepository : EntrantRepository() {
         ),
     )
 
+    /** Reviews written through [submitReview], one per campsite. */
+    val reviews = mutableListOf<ReviewDoc>()
+
     /** Entrants on each sample waiting list, including people not stored here. */
     val waitingListSizes = mutableMapOf(
         "LOT-1" to 18,
@@ -214,14 +218,42 @@ open class SampleEntrantRepository : EntrantRepository() {
     override suspend fun getCampsite(campsiteId: String): Campsite? =
         campsites.firstOrNull { it.id == campsiteId }
 
+    override suspend fun getReviewsByEntrant(entrantId: String): List<ReviewDoc> =
+        reviews.filter { it.authorId == entrantId }
+
     override suspend fun submitReview(
         campsiteId: String,
         entrantId: String,
         rating: Double,
         comment: String,
     ) {
+        val existing = reviews.firstOrNull {
+            it.campsiteId == campsiteId && it.authorId == entrantId
+        }
+        val review = ReviewDoc(
+            id = existing?.id ?: "REV-$campsiteId-$entrantId",
+            campsiteId = campsiteId,
+            authorId = entrantId,
+            authorName = entrant.name,
+            rating = rating,
+            comment = comment.trim(),
+            createdAt = existing?.createdAt,
+        )
+        if (existing != null) {
+            reviews[reviews.indexOf(existing)] = review
+        } else {
+            reviews.add(review)
+        }
+
         val index = campsites.indexOfFirst { it.id == campsiteId }
-        if (index != -1) campsites[index] = campsites[index].addRating(rating)
+        if (index != -1) {
+            val campsite = campsites[index]
+            campsites[index] = if (existing != null) {
+                campsite.copy(ratingSum = campsite.ratingSum - existing.rating + rating)
+            } else {
+                campsite.addRating(rating)
+            }
+        }
     }
 
     override suspend fun getReservations(entrantId: String): List<Reservation> =

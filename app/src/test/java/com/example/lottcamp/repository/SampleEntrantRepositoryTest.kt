@@ -38,6 +38,23 @@ class SampleEntrantRepositoryTest {
         val after = data.getCampsite("CAMP-001")!!
         assertEquals(before.ratingSum + 5.0, after.ratingSum, 0.001)
         assertEquals(before.ratingCount + 1, after.ratingCount)
+        assertTrue("CAMP-001" in data.getReviewedCampsiteIds(SampleEntrantRepository.ENTRANT_ID))
+    }
+
+    @Test
+    fun submitReview_twice_updatesTheSameReview() = runBlocking {
+        data.submitReview("CAMP-001", SampleEntrantRepository.ENTRANT_ID, 5.0, "First")
+        data.submitReview("CAMP-001", SampleEntrantRepository.ENTRANT_ID, 2.0, "Updated")
+
+        val reviews = data.getReviewsByEntrant(SampleEntrantRepository.ENTRANT_ID)
+            .filter { it.campsiteId == "CAMP-001" }
+        assertEquals(1, reviews.size)
+        assertEquals(2.0, reviews.single().rating, 0.001)
+        assertEquals("Updated", reviews.single().comment)
+
+        val campsite = data.getCampsite("CAMP-001")!!
+        assertEquals(27.0 + 2.0, campsite.ratingSum, 0.001)
+        assertEquals(7, campsite.ratingCount)
     }
 
     @Test
