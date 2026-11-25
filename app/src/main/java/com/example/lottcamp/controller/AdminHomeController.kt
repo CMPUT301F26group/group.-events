@@ -1,6 +1,7 @@
 package com.example.lottcamp.controller
 
 import com.example.lottcamp.domain.Campsite
+import com.example.lottcamp.repository.ImageRepository
 
 /**
  * Controller for the admin home screen.
@@ -14,6 +15,7 @@ class AdminHomeController(
     private val admin: AdminController,
     private val navigate: (String) -> Unit = {},
 ) {
+    val imageRepo: ImageRepository get() = admin.imageRepo
 
     val userCount get() = admin.users.size
     val imageCount get() = admin.images.size

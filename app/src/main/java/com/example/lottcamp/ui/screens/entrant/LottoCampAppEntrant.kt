@@ -22,17 +22,20 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.lottcamp.domain.UserRole
+import com.example.lottcamp.repository.EntrantRepository
 import com.example.lottcamp.ui.components.AppNavBar
 import com.example.lottcamp.ui.components.AppNavItem
 
 /**
  * Navigation between the entrant screens, starting at campsite search, with a bottom nav bar.
  *
- * @param roles Roles the user can switch to from the search screen header. Empty for regular entrants.
+ * @param data Where the entrant data comes from.
+ * @param roles Roles the user can switch to from the search screen header. Empty hides the switcher.
  * @param onRoleSelected Called with the role picked in the header.
  */
 @Composable
 fun LottoCampAppEntrant(
+    data: EntrantRepository = EntrantRepository(),
     roles: List<UserRole> = emptyList(),
     onRoleSelected: (UserRole) -> Unit = {},
 ) {
@@ -88,7 +91,7 @@ fun LottoCampAppEntrant(
             composable("entrant-campsite-search-screen") {
                 EntrantCampsiteSearchScreen(navController, Modifier.padding(innerPadding), searchViewModel, roles, onRoleSelected)
             }
-            composable("entrant-bookings-screen") { EntrantBookingsScreen(navController, Modifier.padding(innerPadding)) }
+            composable("entrant-bookings-screen") { EntrantBookingsScreen(navController, Modifier.padding(innerPadding), data) }
             composable("entrant-messages-screen") { EntrantMessagesScreen(navController, Modifier.padding(innerPadding)) }
             composable("entrant-profile-screen") { EntrantProfileScreen(navController, Modifier.padding(innerPadding)) }
             composable(
@@ -101,6 +104,32 @@ fun LottoCampAppEntrant(
                 EntrantCampsiteDetailsScreen(navController, Modifier.padding(innerPadding), campsiteId)
             }
             composable("entrant-campsite-filter-screen") { EntrantCampsiteFilterScreen(navController, Modifier.padding(innerPadding), searchViewModel) }
+            composable(
+                "entrant-campsite-rating-screen/{campsiteId}",
+                arguments = listOf(
+                    navArgument("campsiteId") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val campsiteId = backStackEntry.arguments?.getString("campsiteId") ?: ""
+                EntrantCampsiteRatingScreen(navController, Modifier.padding(innerPadding), campsiteId, data)
+            }
+            composable(
+                "entrant-rating-submitted-screen/{campsiteId}/{rating}",
+                arguments = listOf(
+                    navArgument("campsiteId") { type = NavType.StringType },
+                    navArgument("rating") { type = NavType.IntType },
+                )
+            ) { backStackEntry ->
+                val campsiteId = backStackEntry.arguments?.getString("campsiteId") ?: ""
+                val rating = backStackEntry.arguments?.getInt("rating") ?: 0
+                EntrantRatingSubmittedScreen(
+                    navController,
+                    Modifier.padding(innerPadding),
+                    campsiteId,
+                    rating,
+                    data,
+                )
+            }
         }
     }
 

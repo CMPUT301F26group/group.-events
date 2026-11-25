@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.ui.screens.admin.AdminNavGraph
 import com.example.lottcamp.ui.screens.entrant.LottoCampAppEntrant
+import com.example.lottcamp.ui.screens.owner.OwnerNavGraph
 import com.example.lottcamp.ui.theme.LottCampTheme
 
 class MainActivity : ComponentActivity() {
@@ -31,7 +32,7 @@ class MainActivity : ComponentActivity() {
 
                 LaunchedEffect(Unit) {
                     val isAdmin = true // AdminRepository().isAdmin(androidId)
-                    availableRoles = if (isAdmin) listOf(UserRole.ADMIN, UserRole.ENTRANT) else emptyList()
+                    availableRoles = if (isAdmin) UserRole.entries else listOf(UserRole.ENTRANT, UserRole.OWNER)
                     if (activeRole == null) {
                         activeRole = if (isAdmin) UserRole.ADMIN else UserRole.ENTRANT
                     }
@@ -40,7 +41,11 @@ class MainActivity : ComponentActivity() {
                 when (activeRole) {
                     UserRole.ADMIN -> AdminNavGraph(roles = availableRoles, onRoleSelected = { activeRole = it })
                     UserRole.ENTRANT -> LottoCampAppEntrant(roles = availableRoles, onRoleSelected = { activeRole = it })
-                    UserRole.OWNER -> { /* owner */ }
+                    UserRole.OWNER -> OwnerNavGraph(
+                        ownerId = androidId,
+                        availableRoles = availableRoles,
+                        onRoleChange = { activeRole = it },
+                    )
                     null -> {}
                 }
             }

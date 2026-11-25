@@ -1,7 +1,5 @@
 package com.example.lottcamp.ui.screens.entrant
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -33,17 +31,14 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
-@RequiresApi(Build.VERSION_CODES.O)
 private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-@RequiresApi(Build.VERSION_CODES.O)
 private fun String.toLocalDateOrNull(): LocalDate? = try {
     LocalDate.parse(this, formatter)
 } catch (e: DateTimeParseException) {
     null
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EntrantCampsiteFilterScreen(navController: NavController, modifier: Modifier = Modifier, viewModel: SearchViewModel) {
     var location by remember { mutableStateOf("") }

@@ -1,7 +1,5 @@
 package com.example.lottcamp.domain
 
-import com.google.firebase.firestore.DocumentId
-
 /**
  * Domain model representing a Campsite registered by an owner.
  */
@@ -15,7 +13,7 @@ data class Campsite(
     val description: String = "",
     val maxOccupancy: Int,
     val pricePerNight: Double,
-    val imageUrl: String? = null,
+    var imageId: String? = null,
     val tags: List<String> = emptyList(),
     val ratingSum: Double = 0.0,
     val ratingCount: Int = 0,
