@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -45,10 +46,22 @@ fun AppListRow(
         leading()
         Spacer(Modifier.width(16.dp))
         Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
-            AppMutedText(subtitle)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            AppMutedText(
+                text = subtitle,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
-        AppMutedText(trailing)
+        if (trailing.isNotEmpty()) {
+            Spacer(Modifier.width(8.dp))
+            AppMutedText(trailing, maxLines = 1)
+        }
         if (onClick != null) {
             Icon(
                 Icons.AutoMirrored.Filled.KeyboardArrowRight,

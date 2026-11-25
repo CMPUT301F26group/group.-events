@@ -62,6 +62,12 @@ fun EntrantCampsiteSearchScreen(
     val imageRepo = remember { ImageRepository() }
     val currentFilter = controller.filter
     val displayedResults = controller.displayedResults
+    val hasActiveFilters = currentFilter.locationName != null ||
+        currentFilter.name != null ||
+        (currentFilter.startDate != null && currentFilter.endDate != null) ||
+        currentFilter.minOccupancy != null ||
+        currentFilter.maxPricePerNight != null ||
+        currentFilter.tags.isNotEmpty()
 
     Column(
         modifier = modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
@@ -94,63 +100,65 @@ fun EntrantCampsiteSearchScreen(
             )
         }
 
-        LazyRow(
-            modifier = Modifier
-                .heightIn(min = 36.dp)
-                .testTag(EntrantSearchTestTags.ACTIVE_FILTERS_ROW),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            currentFilter.locationName?.let { name ->
-                item {
+        if (hasActiveFilters) {
+            LazyRow(
+                modifier = Modifier
+                    .heightIn(min = 36.dp)
+                    .testTag(EntrantSearchTestTags.ACTIVE_FILTERS_ROW),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                currentFilter.locationName?.let { name ->
+                    item {
+                        AppFilterTag(
+                            text = name,
+                            onClick = controller::removeLocationFilter,
+                            modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("location")),
+                        )
+                    }
+                }
+                currentFilter.name?.let { name ->
+                    item {
+                        AppFilterTag(
+                            text = name,
+                            onClick = controller::removeNameFilter,
+                            modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("name")),
+                        )
+                    }
+                }
+                if (currentFilter.startDate != null && currentFilter.endDate != null) {
+                    item {
+                        AppFilterTag(
+                            text = "${currentFilter.startDate}-${currentFilter.endDate}",
+                            onClick = controller::removeDateRangeFilter,
+                            modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("dates")),
+                        )
+                    }
+                }
+                currentFilter.minOccupancy?.let { guests ->
+                    item {
+                        AppFilterTag(
+                            text = "$guests guests",
+                            onClick = controller::removeOccupancyFilter,
+                            modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("occupancy")),
+                        )
+                    }
+                }
+                currentFilter.maxPricePerNight?.let { price ->
+                    item {
+                        AppFilterTag(
+                            text = "\$$price",
+                            onClick = controller::removeMaxPriceFilter,
+                            modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("max_price")),
+                        )
+                    }
+                }
+                items(currentFilter.tags) { tag ->
                     AppFilterTag(
-                        text = name,
-                        onClick = controller::removeLocationFilter,
-                        modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("location")),
+                        text = tag,
+                        onClick = { controller.removeTagFilter(tag) },
+                        modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("tag_$tag")),
                     )
                 }
-            }
-            currentFilter.name?.let { name ->
-                item {
-                    AppFilterTag(
-                        text = name,
-                        onClick = controller::removeNameFilter,
-                        modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("name")),
-                    )
-                }
-            }
-            if (currentFilter.startDate != null && currentFilter.endDate != null) {
-                item {
-                    AppFilterTag(
-                        text = "${currentFilter.startDate}-${currentFilter.endDate}",
-                        onClick = controller::removeDateRangeFilter,
-                        modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("dates")),
-                    )
-                }
-            }
-            currentFilter.minOccupancy?.let { guests ->
-                item {
-                    AppFilterTag(
-                        text = "$guests guests",
-                        onClick = controller::removeOccupancyFilter,
-                        modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("occupancy")),
-                    )
-                }
-            }
-            currentFilter.maxPricePerNight?.let { price ->
-                item {
-                    AppFilterTag(
-                        text = "\$$price",
-                        onClick = controller::removeMaxPriceFilter,
-                        modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("max_price")),
-                    )
-                }
-            }
-            items(currentFilter.tags) { tag ->
-                AppFilterTag(
-                    text = tag,
-                    onClick = { controller.removeTagFilter(tag) },
-                    modifier = Modifier.testTag(EntrantSearchTestTags.activeFilterTag("tag_$tag")),
-                )
             }
         }
 
