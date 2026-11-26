@@ -14,8 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import com.example.lottcamp.ui.theme.SurfaceLight
-import com.example.lottcamp.ui.theme.TextLight
+import com.example.lottcamp.ui.theme.LocalAccessibilityController
 
 /**
  * Square icon-only button.
@@ -36,13 +35,14 @@ fun AppIconButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    val containerColor = SurfaceLight
-    val contentColor = TextLight
+    val containerColor = MaterialTheme.colorScheme.surface
+    val contentColor = MaterialTheme.colorScheme.onSurface
     val shape = MaterialTheme.shapes.medium
+    val buttonScale = LocalAccessibilityController.current.settings.buttonSize.buttonScale
 
     Box(
         modifier = modifier
-            .size(56.dp)
+            .size(56.dp * buttonScale)
             .clip(shape)
             .background(containerColor)
             .border(
@@ -61,7 +61,7 @@ fun AppIconButton(
             imageVector = icon,
             contentDescription = contentDescription,
             tint = contentColor,
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(24.dp * buttonScale),
         )
     }
 }

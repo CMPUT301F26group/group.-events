@@ -2,6 +2,8 @@ package com.example.lottcamp.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
@@ -11,8 +13,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.example.lottcamp.ui.theme.LocalAccessibilityController
 
 /** Visual styles for [AppChip]. */
 enum class AppChipVariant { Outlined, Secondary, Primary }
@@ -41,6 +45,15 @@ fun AppChip(
     variant: AppChipVariant = if (selected) AppChipVariant.Primary else AppChipVariant.Outlined,
 ) {
     val colors = MaterialTheme.colorScheme
+    val buttonScale = LocalAccessibilityController.current.settings.buttonSize.buttonScale
+    val layoutDirection = LocalLayoutDirection.current
+    val horizontalScale = buttonScale.coerceAtMost(1.2f)
+    val scaledPadding = PaddingValues(
+        start = contentPadding.calculateStartPadding(layoutDirection) * horizontalScale,
+        top = contentPadding.calculateTopPadding() * buttonScale,
+        end = contentPadding.calculateEndPadding(layoutDirection) * horizontalScale,
+        bottom = contentPadding.calculateBottomPadding() * buttonScale,
+    )
     Surface(
         modifier = modifier
             .clip(CircleShape)
@@ -69,7 +82,7 @@ fun AppChip(
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(contentPadding),
+            modifier = Modifier.padding(scaledPadding),
         )
     }
 }

@@ -2,6 +2,7 @@ package com.example.lottcamp.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -9,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.lottcamp.ui.theme.LocalAccessibilityController
 
 /**
  * Style variants available to [AppButton].
@@ -54,10 +56,12 @@ fun AppButton(
         null
     }
 
+    val buttonScale = LocalAccessibilityController.current.settings.buttonSize.buttonScale
+
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier,
+        modifier = modifier.heightIn(min = 48.dp * buttonScale),
         shape = MaterialTheme.shapes.medium,
         border = border,
         colors = ButtonDefaults.buttonColors(
@@ -66,7 +70,10 @@ fun AppButton(
             disabledContainerColor = MaterialTheme.colorScheme.surface,
             disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         ),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+        contentPadding = PaddingValues(
+            horizontal = 20.dp * buttonScale.coerceAtMost(1.15f),
+            vertical = 16.dp * buttonScale,
+        ),
     ) {
         Text(text = text, style = MaterialTheme.typography.bodyLarge)
     }

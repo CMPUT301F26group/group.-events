@@ -16,7 +16,10 @@ import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.ui.screens.admin.AdminNavGraph
 import com.example.lottcamp.ui.screens.entrant.EntrantNavGraph
 import com.example.lottcamp.ui.screens.owner.OwnerNavGraph
+import com.example.lottcamp.ui.theme.AccessibilityController
 import com.example.lottcamp.ui.theme.LottCampTheme
+import com.example.lottcamp.ui.theme.loadAccessibilitySettings
+import com.example.lottcamp.ui.theme.saveAccessibilitySettings
 
 class MainActivity : ComponentActivity() {
     @SuppressLint("HardwareIds")
@@ -24,7 +27,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            LottCampTheme {
+            val accessibilityController = remember {
+                AccessibilityController(
+                    initial = loadAccessibilitySettings(this),
+                    onSave = { saveAccessibilitySettings(this, it) },
+                )
+            }
+            LottCampTheme(accessibilityController = accessibilityController) {
                 // Admins are the users whose Android ID is in the admins collection
                 val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
                 var availableRoles by remember { mutableStateOf<List<UserRole>>(emptyList()) }

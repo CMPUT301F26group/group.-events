@@ -24,6 +24,9 @@ class AdminHomeController(
     /** The first few campsites, shown under "Latest listings". */
     val latestCampsites: List<Campsite> get() = admin.campsites.take(2)
 
+    /** Image IDs from all campsites that have a photo. */
+    val campsiteImageIds: List<String> get() = admin.campsites.mapNotNull { it.imageId }
+
     // TODO: hook up once the global search is designed.
     fun onSearch(query: String) {}
 

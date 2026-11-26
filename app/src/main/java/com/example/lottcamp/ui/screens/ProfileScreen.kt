@@ -5,11 +5,13 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,17 +27,24 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,11 +65,18 @@ import com.example.lottcamp.repository.ImageRepository
 import com.example.lottcamp.ui.components.AppAvatar
 import com.example.lottcamp.ui.components.AppButton
 import com.example.lottcamp.ui.components.AppButtonVariant
+import com.example.lottcamp.ui.components.AppChip
+import com.example.lottcamp.ui.components.AppChipVariant
 import com.example.lottcamp.ui.components.AppDialog
 import com.example.lottcamp.ui.components.AppSectionTitle
 import com.example.lottcamp.ui.components.AppStoredImage
 import com.example.lottcamp.ui.components.AppTextField
 import com.example.lottcamp.ui.components.AppTopBar
+import com.example.lottcamp.ui.theme.AccessibilityController
+import com.example.lottcamp.ui.theme.AccessibilitySize
+import com.example.lottcamp.ui.theme.ColorBlindMode
+import com.example.lottcamp.ui.theme.LocalAccessibilityController
+import com.example.lottcamp.ui.theme.ScaledButtonControl
 
 /** Shared navigation routes for the profile and policies screens. */
 object ProfileRoutes {
@@ -138,6 +154,7 @@ fun ProfileScreen(
         if (uri != null) controller.onPhotoPicked(context, uri)
     }
 
+    val accessibility = LocalAccessibilityController.current
     val displayName = controller.name.trim().ifEmpty { "New profile" }
 
     Column(
@@ -270,21 +287,25 @@ fun ProfileScreen(
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.weight(1f),
                 )
-                Switch(
-                    checked = controller.notificationsEnabled,
-                    onCheckedChange = null,
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                        checkedTrackColor = MaterialTheme.colorScheme.primary,
-                        checkedBorderColor = Color.Transparent,
-                        uncheckedThumbColor = MaterialTheme.colorScheme.surface,
-                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
-                        uncheckedBorderColor = MaterialTheme.colorScheme.outline,
-                    ),
-                )
+                ScaledButtonControl {
+                    Switch(
+                        checked = controller.notificationsEnabled,
+                        onCheckedChange = null,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                            checkedTrackColor = MaterialTheme.colorScheme.primary,
+                            checkedBorderColor = Color.Transparent,
+                            uncheckedThumbColor = MaterialTheme.colorScheme.surface,
+                            uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                            uncheckedBorderColor = MaterialTheme.colorScheme.outline,
+                        ),
+                    )
+                }
             }
 
             Spacer(Modifier.height(8.dp))
+
+            AccessibilityQuickSettings(accessibility = accessibility)
 
             Row(
                 modifier = Modifier
@@ -396,5 +417,122 @@ private fun PolicySection(title: String, body: String) {
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+}
+
+/** Accessibility quick-settings card with dropdown pickers for color blind mode and sizing. */
+@Composable
+private fun AccessibilityQuickSettings(accessibility: AccessibilityController) {
+    val settings = accessibility.settings
+    val colorModes = ColorBlindMode.entries
+    val sizes = AccessibilitySize.entries
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        AppSectionTitle("Accessibility")
+
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        ) {
+            Column(
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                AccessibilityDropdownRow(
+                    label = "Color blind mode",
+                    options = colorModes.map { it.label },
+                    selected = colorModes.indexOf(settings.colorBlindMode),
+                    onSelect = { accessibility.update(settings.copy(colorBlindMode = colorModes[it])) },
+                )
+
+                AccessibilityDropdownRow(
+                    label = "Font size",
+                    options = sizes.map { it.label },
+                    selected = sizes.indexOf(settings.textSize),
+                    onSelect = { accessibility.update(settings.copy(textSize = sizes[it])) },
+                )
+
+                AccessibilityDropdownRow(
+                    label = "Button size",
+                    options = sizes.map { it.label },
+                    selected = sizes.indexOf(settings.buttonSize),
+                    onSelect = { accessibility.update(settings.copy(buttonSize = sizes[it])) },
+                )
+
+                AccessibilityDropdownRow(
+                    label = "UI component size",
+                    options = sizes.map { it.label },
+                    selected = sizes.indexOf(settings.uiSize),
+                    onSelect = { accessibility.update(settings.copy(uiSize = sizes[it])) },
+                )
+
+                if (!settings.isDefault) {
+                    Text(
+                        text = "Reset to default",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(top = 4.dp)
+                            .clickable(onClick = accessibility::reset),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Labeled setting row with a dropdown menu chip, matching the app header menu style. */
+@Composable
+private fun AccessibilityDropdownRow(
+    label: String,
+    options: List<String>,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+        )
+        Box {
+            AppChip(
+                text = "${options[selected]} ▾",
+                selected = false,
+                onClick = { menuOpen = true },
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                variant = AppChipVariant.Secondary,
+            )
+            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                options.forEachIndexed { index, option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            menuOpen = false
+                            onSelect(index)
+                        },
+                        trailingIcon = {
+                            if (index == selected) {
+                                Icon(Icons.Default.Check, contentDescription = "Selected")
+                            }
+                        },
+                    )
+                }
+            }
+        }
     }
 }

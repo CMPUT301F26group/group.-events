@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.lottcamp.ui.theme.ScaledButtonControl
 
 /**
  * Top bar with a back arrow and a title, with a divider underneath.
@@ -39,8 +40,10 @@ fun AppTopBar(
             modifier = Modifier.fillMaxWidth().padding(4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onBack, modifier = backButtonModifier) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            ScaledButtonControl {
+                IconButton(onClick = onBack, modifier = backButtonModifier) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                }
             }
             Text(title, style = MaterialTheme.typography.titleLarge, modifier = titleModifier)
         }
