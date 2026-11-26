@@ -109,7 +109,7 @@ fun EntrantBookingsScreen(
  * @param isLoading Whether the booking data is still loading.
  * @param initialTab Tab selected when the screen first appears: 0 Active, 1 Past, 2 Waiting lists.
  * @param onCancelBooking Invoked by a "Cancel reservation" button.
- * @param onRateCampsite Invoked by a "Rate campsite" button.
+ * @param onRateCampsite Invoked by a "Rate campsite" or "Edit review" button.
  * @param onLeaveWaitingList Invoked by a "Leave waiting list" button.
  */
 @Composable
@@ -162,14 +162,16 @@ private fun BookingsContent(
                 0 -> BookingList(
                     bookings = activeBookings,
                     emptyText = "No active bookings",
-                    actionText = "Cancel reservation",
+                    actionText = { "Cancel reservation" },
                     modifier = Modifier.weight(1f),
                     onAction = onCancelBooking,
                 )
                 1 -> BookingList(
                     bookings = pastBookings,
                     emptyText = "No past bookings",
-                    actionText = "Rate campsite",
+                    actionText = { booking ->
+                        if (booking.hasReview) "Edit review" else "Rate campsite"
+                    },
                     modifier = Modifier.weight(1f),
                     isPast = true,
                     onAction = onRateCampsite,
@@ -188,7 +190,7 @@ private fun BookingsContent(
 private fun BookingList(
     bookings: List<BookingCard>,
     emptyText: String,
-    actionText: String,
+    actionText: (BookingCard) -> String,
     modifier: Modifier = Modifier,
     isPast: Boolean = false,
     onAction: (BookingCard) -> Unit,
@@ -213,7 +215,7 @@ private fun BookingList(
                 } else {
                     "Confirmed · ${booking.reservationId}"
                 },
-                actionText = actionText,
+                actionText = actionText(booking),
                 onAction = { onAction(booking) },
             )
         }

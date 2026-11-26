@@ -10,6 +10,7 @@ import com.example.lottcamp.data.EntryStatus
 import com.example.lottcamp.data.ReservationStatus
 import com.example.lottcamp.domain.Reservation
 import com.example.lottcamp.repository.EntrantRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
@@ -25,6 +26,7 @@ data class BookingCard(
     val campsiteLocation: String,
     val checkIn: LocalDate,
     val checkOut: LocalDate,
+    val hasReview: Boolean = false,
 )
 
 /** Lottery entry data ready to render in the waiting lists tab. */
@@ -85,6 +87,15 @@ class EntrantBookingsController(
                     Log.d(TAG, "controller#$instanceId loaded ${campsites.size} campsites")
                     val today = LocalDate.now()
 
+                    val reviewedCampsiteIds = try {
+                        data.getReviewedCampsiteIds(entrantId)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Log.e(TAG, "controller#$instanceId couldn't load reviews", e)
+                        emptySet()
+                    }
+
                     val reservations = data.getReservations(entrantId)
                     Log.d(TAG, "controller#$instanceId loaded ${reservations.size} reservations")
                     val (past, active) = reservations.partition { reservation ->
@@ -102,6 +113,7 @@ class EntrantBookingsController(
                             campsiteLocation = campsite?.locationName ?: "",
                             checkIn = checkIn,
                             checkOut = checkOut,
+                            hasReview = campsiteId in reviewedCampsiteIds,
                         )
                     }
 

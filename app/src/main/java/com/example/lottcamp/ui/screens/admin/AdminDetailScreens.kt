@@ -110,6 +110,15 @@ fun AdminCampsiteDetailScreen(
                     "Location" to campsite.locationName,
                     "Campsite ID" to campsite.id,
                     "Owner" to controller.ownerName(campsite),
+                    "Rating" to if (campsite.ratingCount > 0) {
+                        "%.1f out of 5 (%d review%s)".format(
+                            campsite.averageRating,
+                            campsite.ratingCount,
+                            if (campsite.ratingCount == 1) "" else "s",
+                        )
+                    } else {
+                        "No ratings yet"
+                    },
                 ),
             ),
             DetailSection("Activity", activity),

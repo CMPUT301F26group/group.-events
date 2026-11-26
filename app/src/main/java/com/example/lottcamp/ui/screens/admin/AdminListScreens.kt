@@ -109,7 +109,17 @@ fun AdminCampsitesScreen(controller: AdminController, onBack: () -> Unit, onCamp
         countText = "${campsites.size} campsite${if (campsites.size == 1) "" else "s"}",
     ) {
         items(campsites, key = { it.id }) { campsite ->
-            AppListRow(campsite.name, "${campsite.locationName} · ${campsite.id}", { onCampsiteClick(campsite) }) {
+            val rating = if (campsite.ratingCount > 0) {
+                "%.1f ★".format(campsite.averageRating)
+            } else {
+                ""
+            }
+            AppListRow(
+                campsite.name,
+                "${campsite.locationName} · ${campsite.id}",
+                { onCampsiteClick(campsite) },
+                trailing = rating,
+            ) {
                 Box {
                     AppImagePlaceholder()
                     AppStoredImage(
@@ -244,6 +254,7 @@ fun AdminMessagesScreen(controller: AdminController, onBack: () -> Unit) {
 @Composable
 fun AdminReviewsScreen(controller: AdminController, campsiteId: String, onBack: () -> Unit) {
     val campsite = controller.campsite(campsiteId) ?: return
+    val reviews = controller.reviewsFor(campsiteId)
     val rating = controller.averageRating(campsiteId)
 
     AdminListPage(title = "Reviews & ratings", onBack = onBack) {
@@ -254,9 +265,11 @@ fun AdminReviewsScreen(controller: AdminController, campsiteId: String, onBack: 
                 AppMutedText("%.1f".format(rating))
                 Spacer(Modifier.width(4.dp))
                 AppRatingBar(rating.toFloat(), starSize = 16.dp)
+                Spacer(Modifier.width(4.dp))
+                AppMutedText("(${reviews.size})")
             }
         }
-        items(controller.reviewsFor(campsiteId), key = { it.id }) { review ->
+        items(reviews, key = { it.id }) { review ->
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -272,7 +285,7 @@ fun AdminReviewsScreen(controller: AdminController, campsiteId: String, onBack: 
                         AppRatingBar(review.rating.toFloat(), starSize = 16.dp)
                     }
                 }
-                AppMutedText(review.text)
+                AppMutedText(review.comment)
                 Text(
                     text = "Remove review",
                     color = MaterialTheme.colorScheme.error,
