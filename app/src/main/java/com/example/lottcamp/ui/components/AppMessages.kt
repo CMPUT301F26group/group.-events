@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
+import com.example.lottcamp.ui.theme.LocalAccessibilityController
 
 /**
  * Chat message bubble. Messages from the owner are green and on the right, others white and on the left.
@@ -110,9 +111,10 @@ fun AppMessageInput(
                 }
             },
         )
+        val buttonScale = LocalAccessibilityController.current.settings.buttonSize.buttonScale
         Box(
             modifier = Modifier
-                .size(56.dp)
+                .size(56.dp * buttonScale)
                 .clip(MaterialTheme.shapes.medium)
                 .background(MaterialTheme.colorScheme.primary)
                 .clickable(enabled = enabled, onClick = onSend),
@@ -122,6 +124,7 @@ fun AppMessageInput(
                 imageVector = Icons.AutoMirrored.Filled.Send,
                 contentDescription = "Send",
                 tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(24.dp * buttonScale),
             )
         }
     }

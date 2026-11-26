@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.example.lottcamp.ui.theme.LocalAccessibilityController
 
 /**
  * Checkbox with a label.
@@ -39,6 +40,8 @@ fun AppCheckbox(
     label: String,
     modifier: Modifier = Modifier,
 ) {
+    val buttonScale = LocalAccessibilityController.current.settings.buttonSize.buttonScale
+    val boxShape = RoundedCornerShape(12.dp * buttonScale)
 
     Row(
         modifier = modifier
@@ -49,13 +52,13 @@ fun AppCheckbox(
                 interactionSource = null,
                 indication = null,
             )
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp * buttonScale),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier
-                .size(30.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .size(30.dp * buttonScale)
+                .clip(boxShape)
                 .background(
                     if (checked) MaterialTheme.colorScheme.primary
                     else MaterialTheme.colorScheme.surface
@@ -64,7 +67,7 @@ fun AppCheckbox(
                     width = 1.dp,
                     color = if (checked) MaterialTheme.colorScheme.primary
                     else MaterialTheme.colorScheme.outline,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = boxShape,
                 ),
             contentAlignment = Alignment.Center,
         ) {
@@ -73,7 +76,7 @@ fun AppCheckbox(
                     imageVector = Icons.Default.Check,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(20.dp * buttonScale),
                 )
             }
         }

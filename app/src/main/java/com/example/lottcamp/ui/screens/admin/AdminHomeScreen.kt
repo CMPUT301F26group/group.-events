@@ -151,25 +151,26 @@ fun AdminHomeScreen(
 
 @Composable
 private fun CampsitesTile(count: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val contentColor = MaterialTheme.colorScheme.onPrimary
     Box(
         modifier = modifier
             .height(200.dp)
             .clip(MaterialTheme.shapes.medium)
-            .background(Color(0xFF1F2A33))
+            .background(MaterialTheme.colorScheme.primary)
             .clickable(onClick = onClick)
             .padding(16.dp),
     ) {
         Column(modifier = Modifier.align(Alignment.TopStart)) {
-            Text("Campsites", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            Text("$count listings", color = Color.White)
+            Text("Campsites", color = contentColor, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text("$count listings", color = contentColor)
         }
         Row(
             modifier = Modifier.align(Alignment.BottomStart),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Browse", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("Browse", color = contentColor, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.width(4.dp))
-            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.White)
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = contentColor)
         }
     }
 }

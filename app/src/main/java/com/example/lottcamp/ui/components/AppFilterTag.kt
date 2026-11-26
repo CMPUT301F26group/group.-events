@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.example.lottcamp.ui.theme.LocalAccessibilityController
 
 /**
  * Pill-shaped tag showing a currently applied filter.
@@ -30,6 +31,7 @@ fun AppFilterTag(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
 ) {
+    val buttonScale = LocalAccessibilityController.current.settings.buttonSize.buttonScale
     Box(
         modifier = modifier
             .clip(CircleShape)
@@ -41,7 +43,10 @@ fun AppFilterTag(
                     Modifier
                 }
             )
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(
+                horizontal = 16.dp * buttonScale.coerceAtMost(1.2f),
+                vertical = 8.dp * buttonScale,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Text(
