@@ -11,7 +11,6 @@ import com.example.lottcamp.domain.Reservation
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldPath
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.channels.awaitClose
@@ -109,9 +108,10 @@ open class EntrantRepository(
     /**
      * Stores [rating] and [comment] as [entrantId]'s review of [campsiteId].
      *
-     * The rating is saved as a float and the comment as a string. When the entrant already has a
-     * review for this campsite it is updated in place and only the difference is added to the
-     * campsite's `ratingSum`; otherwise a new review is created and `ratingCount` goes up by one.
+     * The rating is saved as a float and the comment as a string. The campsite's
+     * `ratingSum` / `ratingCount` are recalculated from every review in the same batch, so they
+     * always match the reviews even if they had drifted before. An entrant has at most one
+     * review per campsite; submitting again updates the existing review instead of adding another.
      */
     open suspend fun submitReview(
         campsiteId: String,
@@ -120,8 +120,10 @@ open class EntrantRepository(
         comment: String,
     ) {
         require(rating in 1.0..5.0) { "Rating must be between 1.0 and 5.0" }
-        val existing = getReview(campsiteId, entrantId)
         val entrant = getEntrantByAndroidId(entrantId)
+        val campsiteReviews = reviews.whereEqualTo("campsiteId", campsiteId)
+            .get().await().toObjects(ReviewDoc::class.java)
+        val existing = campsiteReviews.firstOrNull { it.authorId == entrantId }
         val reviewId = existing?.id?.takeIf { it.isNotBlank() } ?: "$campsiteId-$entrantId"
         val review = ReviewDoc(
             id = reviewId,
@@ -132,22 +134,15 @@ open class EntrantRepository(
             comment = comment.trim(),
             createdAt = existing?.createdAt ?: Timestamp.now(),
         )
+        val otherRatings = campsiteReviews.filter { it.authorId != entrantId }
 
-        val campsiteRef = db.collection("campsites").document(campsiteId)
         val batch = db.batch()
         batch.set(reviews.document(reviewId), review)
-        if (existing != null) {
-            batch.update(
-                campsiteRef,
-                "ratingSum", FieldValue.increment(rating - existing.rating),
-            )
-        } else {
-            batch.update(
-                campsiteRef,
-                "ratingSum", FieldValue.increment(rating),
-                "ratingCount", FieldValue.increment(1),
-            )
-        }
+        batch.update(
+            db.collection("campsites").document(campsiteId),
+            "ratingSum", otherRatings.sumOf { it.rating } + rating,
+            "ratingCount", otherRatings.size + 1,
+        )
         batch.commit().await()
     }
 

@@ -91,8 +91,10 @@ fun EntrantNavGraph(
         )
     }
 
-    LaunchedEffect(entrantId) {
-        searchController.refreshResults()
+    // Reload the campsites whenever the search screen is shown again so ratings left on the
+    // details screen appear on the listing cards right away.
+    LaunchedEffect(currentRoute) {
+        if (currentRoute == EntrantRoutes.SEARCH) searchController.refreshResults()
     }
 
     val activeError = searchController.error ?: bookingsController.error

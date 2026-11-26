@@ -20,7 +20,6 @@ import com.example.lottcamp.domain.UserRole
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
@@ -150,12 +149,14 @@ open class AdminRepository(
         campsiteRepo.deleteCampsite(campsiteId)
     }
 
-    /** Deletes [review] and takes its rating out of the campsite's average. */
+    /** Deletes [review] and recalculates the campsite's rating from its remaining reviews. */
     open suspend fun removeReview(review: Review) {
         reviews.document(review.id).delete().await()
+        val remaining = reviews.whereEqualTo("campsiteId", review.campsiteId)
+            .get().await().toObjects(ReviewDoc::class.java)
         campsites.document(review.campsiteId).update(
-            "ratingSum", FieldValue.increment(-review.rating.toDouble()),
-            "ratingCount", FieldValue.increment(-1),
+            "ratingSum", remaining.sumOf { it.rating },
+            "ratingCount", remaining.size,
         ).await()
     }
 
