@@ -98,6 +98,14 @@ open class SampleAdminRepository : AdminRepository() {
 
     override suspend fun removeReview(review: Review) {
         reviews.removeAll { it.id == review.id }
+        val remaining = reviews.filter { it.campsiteId == review.campsiteId }
+        campsites.replaceAll {
+            if (it.id == review.campsiteId) {
+                it.copy(ratingSum = remaining.sumOf { r -> r.rating }, ratingCount = remaining.size)
+            } else {
+                it
+            }
+        }
     }
 
     override suspend fun removeImage(image: UploadedImage) {

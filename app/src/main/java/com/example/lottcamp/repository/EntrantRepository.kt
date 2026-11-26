@@ -119,6 +119,8 @@ open class EntrantRepository(
         rating: Double,
         comment: String,
     ) {
+        require(campsiteId.isNotBlank()) { "Campsite ID cannot be blank" }
+        require(entrantId.isNotBlank()) { "Entrant ID cannot be blank" }
         require(rating in 1.0..5.0) { "Rating must be between 1.0 and 5.0" }
         val entrant = getEntrantByAndroidId(entrantId)
         val campsiteReviews = reviews.whereEqualTo("campsiteId", campsiteId)
@@ -129,7 +131,9 @@ open class EntrantRepository(
             id = reviewId,
             campsiteId = campsiteId,
             authorId = entrantId,
-            authorName = entrant?.name ?: existing?.authorName ?: "Anonymous",
+            authorName = entrant?.name?.takeIf { it.isNotBlank() }
+                ?: existing?.authorName?.takeIf { it.isNotBlank() }
+                ?: "Anonymous",
             rating = rating,
             comment = comment.trim(),
             createdAt = existing?.createdAt ?: Timestamp.now(),

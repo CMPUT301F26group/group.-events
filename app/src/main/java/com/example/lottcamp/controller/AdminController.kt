@@ -214,10 +214,10 @@ class AdminController(private val data: AdminRepository, private val scope: Coro
             // Keep the campsite shown on the admin screens in sync with the new average
             val index = campsites.indexOfFirst { it.id == review.campsiteId }
             if (index != -1) {
-                val campsite = campsites[index]
-                campsites[index] = campsite.copy(
-                    ratingSum = (campsite.ratingSum - review.rating).coerceAtLeast(0.0),
-                    ratingCount = (campsite.ratingCount - 1).coerceAtLeast(0),
+                val remaining = reviewsFor(review.campsiteId)
+                campsites[index] = campsites[index].copy(
+                    ratingSum = remaining.sumOf { it.rating },
+                    ratingCount = remaining.size,
                 )
             }
         }

@@ -46,6 +46,7 @@ import com.example.lottcamp.ui.components.AppRatingBar
 import com.example.lottcamp.ui.components.AppSectionTitle
 import com.example.lottcamp.ui.components.AppTopBar
 import com.example.lottcamp.ui.theme.LottCampTheme
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -79,18 +80,23 @@ fun EntrantCampsiteRatingScreen(
     var submitting by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var isEditing by remember { mutableStateOf(false) }
+    var loadedExisting by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(campsiteId, entrantId, repository) {
         val loadedCampsite = repository.getCampsite(campsiteId)
         val existing = try {
             repository.getReview(campsiteId, entrantId)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
+            error = "Couldn't load your existing review: ${e.message}"
             null
         }
         isEditing = existing != null
-        if (existing != null) {
+        if (existing != null && !loadedExisting) {
             rating = existing.rating.roundToInt()
             review = existing.comment
+            loadedExisting = true
         }
         campsite = loadedCampsite
     }
@@ -120,14 +126,18 @@ fun EntrantCampsiteRatingScreen(
         onBack = { navController.popBackStack() },
         onSubmit = {
             if (rating > 0 && !submitting) {
+                val submittedRating = rating
+                val submittedReview = review
                 submitting = true
                 error = null
                 scope.launch {
                     try {
-                        repository.submitReview(campsiteId, entrantId, rating.toDouble(), review)
-                        navController.navigate(EntrantRoutes.ratingSubmitted(campsiteId, rating)) {
+                        repository.submitReview(campsiteId, entrantId, submittedRating.toDouble(), submittedReview)
+                        navController.navigate(EntrantRoutes.ratingSubmitted(campsiteId, submittedRating)) {
                             popUpTo(EntrantRoutes.RATE_CAMPSITE) { inclusive = true }
                         }
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (e: Exception) {
                         error = "Couldn't submit your rating: ${e.message}"
                     } finally {
@@ -221,7 +231,7 @@ fun RateCampsiteContent(
                 ) {
                     AppRatingBar(
                         rating = rating.toFloat(),
-                        readOnly = false,
+                        readOnly = submitting,
                         starSize = 48.dp,
                         onRatingChange = onRatingChange,
                     )
@@ -238,6 +248,7 @@ fun RateCampsiteContent(
             OutlinedTextField(
                 value = review,
                 onValueChange = onReviewChange,
+                enabled = !submitting,
                 label = { Text("Review (optional)") },
                 placeholder = { Text("Share your experience...") },
                 minLines = 7,

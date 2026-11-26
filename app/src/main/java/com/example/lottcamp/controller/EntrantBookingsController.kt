@@ -10,6 +10,7 @@ import com.example.lottcamp.data.EntryStatus
 import com.example.lottcamp.data.ReservationStatus
 import com.example.lottcamp.domain.Reservation
 import com.example.lottcamp.repository.EntrantRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
@@ -88,6 +89,8 @@ class EntrantBookingsController(
 
                     val reviewedCampsiteIds = try {
                         data.getReviewedCampsiteIds(entrantId)
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (e: Exception) {
                         Log.e(TAG, "controller#$instanceId couldn't load reviews", e)
                         emptySet()

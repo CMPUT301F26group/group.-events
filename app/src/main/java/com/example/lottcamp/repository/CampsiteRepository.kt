@@ -6,6 +6,7 @@ import com.example.lottcamp.domain.Campsite
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 
 class CampsiteRepository(
@@ -122,6 +123,8 @@ class CampsiteRepository(
         if (isEmpty()) return this
         val docs = try {
             reviews.get().await().toObjects(ReviewDoc::class.java)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             // The caller may not be allowed to read reviews; keep the stored counters.
             return this
@@ -138,6 +141,8 @@ class CampsiteRepository(
         val docs = try {
             reviews.whereEqualTo("campsiteId", id).get().await()
                 .toObjects(ReviewDoc::class.java)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             // The caller may not be allowed to read reviews; keep the stored counters.
             return this
