@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Chat
-import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
@@ -84,12 +84,13 @@ fun AdminNavGraph(
                     label = "Explore",
                     icon = Icons.Outlined.Home,
                 )
-                // TODO: no admin bookings screen yet
                 AppNavItem(
-                    selected = false,
-                    onClick = {},
-                    label = "Bookings",
-                    icon = Icons.Outlined.CalendarToday,
+                    selected = currentRoute == AdminRoutes.NOTIFICATIONS,
+                    onClick = {
+                        navController.navigate(AdminRoutes.notifications()) { launchSingleTop = true }
+                    },
+                    label = "Notifications",
+                    icon = Icons.Outlined.Notifications,
                 )
                 AppNavItem(
                     selected = currentRoute == AdminRoutes.MESSAGES,
