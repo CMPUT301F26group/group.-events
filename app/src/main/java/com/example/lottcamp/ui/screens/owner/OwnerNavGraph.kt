@@ -40,6 +40,8 @@ import com.example.lottcamp.repository.ReservationRepository
 import com.example.lottcamp.ui.components.AppBottomNavOwner
 import com.example.lottcamp.ui.components.AppStoredImage
 import com.example.lottcamp.ui.components.MainTab
+import com.example.lottcamp.ui.screens.ProfileRoutes
+import com.example.lottcamp.ui.screens.profileRoutes
 
 /**
  * Navigation between all owner screens, starting at the owner home screen.
@@ -81,9 +83,10 @@ fun OwnerNavGraph(
 
     // The highlighted tab follows the screen that is showing
     val route = navController.currentBackStackEntryAsState().value?.destination?.route
-    val tab = when (route) {
-        OwnerRoutes.RESERVATIONS -> MainTab.Bookings
-        OwnerRoutes.NOTIFICATIONS, OwnerRoutes.CHAT -> MainTab.Messages
+    val tab = when {
+        route == OwnerRoutes.RESERVATIONS -> MainTab.Bookings
+        route == OwnerRoutes.NOTIFICATIONS || route == OwnerRoutes.CHAT -> MainTab.Messages
+        ProfileRoutes.isProfileRoute(route) -> MainTab.Profile
         else -> MainTab.Explore
     }
 
@@ -127,7 +130,10 @@ fun OwnerNavGraph(
                                 }
                             }
                         }
-                        MainTab.Profile -> {} // no owner profile screen in the design
+                        MainTab.Profile -> navController.navigate(ProfileRoutes.PROFILE) {
+                            popUpTo(OwnerRoutes.MY_CAMPSITES)
+                            launchSingleTop = true
+                        }
                     }
                 },
             )
@@ -289,6 +295,15 @@ fun OwnerNavGraph(
                     modifier = Modifier.padding(innerPadding),
                 )
             }
+            profileRoutes(
+                navController = navController,
+                userId = ownerId,
+                entrantRepo = entrantRepo,
+                ownerRepo = ownerRepo,
+                imageRepo = imageRepo,
+                syncOwner = true,
+                modifier = Modifier.padding(innerPadding),
+            )
         }
     }
 }

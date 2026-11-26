@@ -36,6 +36,8 @@ import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.repository.EntrantRepository
 import com.example.lottcamp.ui.components.AppNavBar
 import com.example.lottcamp.ui.components.AppNavItem
+import com.example.lottcamp.ui.screens.ProfileRoutes
+import com.example.lottcamp.ui.screens.profileRoutes
 
 /**
  * Navigation graph for all entrant screens, starting at [EntrantRoutes.SEARCH], with a bottom
@@ -156,9 +158,9 @@ fun EntrantNavGraph(
                     icon = Icons.AutoMirrored.Outlined.Chat,
                 )
                 AppNavItem(
-                    selected = currentRoute == EntrantRoutes.PROFILE,
+                    selected = ProfileRoutes.isProfileRoute(currentRoute),
                     onClick = {
-                        navController.navigate(EntrantRoutes.PROFILE) {
+                        navController.navigate(ProfileRoutes.PROFILE) {
                             launchSingleTop = true
                         }
                     },
@@ -192,9 +194,7 @@ fun EntrantNavGraph(
             composable(EntrantRoutes.MESSAGES) {
                 EntrantMessagesScreen(navController, Modifier)
             }
-            composable(EntrantRoutes.PROFILE) {
-                EntrantProfileScreen(navController, Modifier)
-            }
+            profileRoutes(navController, userId = entrantId, entrantRepo = repository)
             composable(
                 route = EntrantRoutes.CAMPSITE_DETAILS,
                 arguments = listOf(navArgument("campsiteId") { type = NavType.StringType }),
