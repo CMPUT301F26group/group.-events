@@ -1,5 +1,6 @@
 package com.example.lottcamp.controller
 
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +50,14 @@ class EntrantSearchController(
 
     /** Last error message, or null when clear. */
     var error by mutableStateOf<String?>(null)
+        private set
+
+    /** Whether the QR code camera scanner is currently displayed. */
+    var isQrScannerOpen by mutableStateOf(false)
+        private set
+
+    /** Whether a scanned QR code did not match any existing campsite. */
+    var qrCampsiteNotFound by mutableStateOf(false)
         private set
 
     /** Campsites matching both [filter] and [searchQuery] (case-insensitive substring). */
@@ -117,7 +126,49 @@ class EntrantSearchController(
     }
 
     fun onOpenFilterClick() = navigate(EntrantRoutes.FILTER)
-    fun onQrScanClick() {}
+
+    fun onQrScanClick() {
+        qrCampsiteNotFound = false
+        isQrScannerOpen = true
+    }
+
+    fun dismissQrScanner() {
+        qrCampsiteNotFound = false
+        isQrScannerOpen = false
+    }
+
+    fun dismissQrNotFound() {
+        qrCampsiteNotFound = false
+    }
+
+    fun onQrCodeScanned(rawValue: String?) {
+        val campsiteId = extractCampsiteId(rawValue)
+        if (campsiteId.isNullOrBlank()) {
+            qrCampsiteNotFound = true
+            return
+        }
+
+        scope.launch {
+            isLoading = true
+            error = null
+            qrCampsiteNotFound = false
+            try {
+                val cachedMatch = baseResults.firstOrNull { it.id == campsiteId }
+                val campsite = cachedMatch ?: campsiteRepo.getCampsiteById(campsiteId)
+                if (campsite != null) {
+                    isQrScannerOpen = false
+                    navigate(EntrantRoutes.campsiteDetails(campsite.id))
+                } else {
+                    qrCampsiteNotFound = true
+                }
+            } catch (e: Exception) {
+                error = "Couldn't verify campsite from QR code: ${e.message}"
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
     fun onCampsiteClick(campsiteId: String) = navigate(EntrantRoutes.campsiteDetails(campsiteId))
     fun onBackClick() = back()
     fun clearError() { error = null }
@@ -132,6 +183,25 @@ class EntrantSearchController(
                     ch.isISOControl() || ch == '\uFFFF' || ch == '\uFFFE' || ch == '\uF8FF'
                 }
                 .take(MAX_QUERY_LENGTH)
+        }
+
+        /**
+         * Extracts a campsite ID from a raw QR value (plain ID, `campsite:<id>`, or URI path).
+         */
+        fun extractCampsiteId(rawValue: String?): String? {
+            val trimmed = rawValue?.trim().orEmpty()
+            if (trimmed.isEmpty()) return null
+
+            if (trimmed.contains("://") || trimmed.contains("/")) {
+                val lastSegment = Uri.parse(trimmed).lastPathSegment?.trim()
+                if (!lastSegment.isNullOrEmpty()) return lastSegment
+            }
+
+            if (trimmed.startsWith("campsite:", ignoreCase = true)) {
+                return trimmed.substringAfter(":").trim().ifEmpty { null }
+            }
+
+            return trimmed
         }
     }
 }
