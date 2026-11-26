@@ -31,7 +31,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -40,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.lottcamp.controller.AdminController
 import com.example.lottcamp.controller.AdminHomeController
+import com.example.lottcamp.repository.ImageRepository
 import com.example.lottcamp.repository.SampleAdminRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -69,6 +73,8 @@ fun AdminHomeScreen(
     onRoleSelected: (UserRole) -> Unit = {},
 ) {
     var query by remember { mutableStateOf("") }
+    val campsiteImageIds = controller.campsiteImageIds
+    val tileImageId = remember(campsiteImageIds) { campsiteImageIds.randomOrNull() }
 
     Column(
         modifier = modifier
@@ -92,6 +98,8 @@ fun AdminHomeScreen(
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             CampsitesTile(
                 count = controller.campsiteCount,
+                imageId = tileImageId,
+                imageRepo = controller.imageRepo,
                 onClick = controller::onBrowseCampsitesClick,
                 modifier = Modifier.weight(2f),
             )
@@ -150,22 +158,51 @@ fun AdminHomeScreen(
 }
 
 @Composable
-private fun CampsitesTile(count: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun CampsitesTile(
+    count: Int,
+    imageId: String?,
+    imageRepo: ImageRepository,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val primary = MaterialTheme.colorScheme.primary
     val contentColor = MaterialTheme.colorScheme.onPrimary
+    val shape = MaterialTheme.shapes.medium
     Box(
         modifier = modifier
             .height(200.dp)
-            .clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.primary)
-            .clickable(onClick = onClick)
-            .padding(16.dp),
+            .shadow(4.dp, shape)
+            .clip(shape)
+            .background(primary)
+            .clickable(onClick = onClick),
     ) {
-        Column(modifier = Modifier.align(Alignment.TopStart)) {
+        AppStoredImage(
+            imageId = imageId,
+            imageRepo = imageRepo,
+            contentDescription = null,
+            modifier = Modifier
+                .matchParentSize()
+                .blur(1.5.dp),
+        )
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            primary.copy(alpha = 0.76f),
+                            primary.copy(alpha = 0.44f),
+                            primary.copy(alpha = 0.80f),
+                        ),
+                    ),
+                ),
+        )
+        Column(modifier = Modifier.align(Alignment.TopStart).padding(16.dp)) {
             Text("Campsites", color = contentColor, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             Text("$count listings", color = contentColor)
         }
         Row(
-            modifier = Modifier.align(Alignment.BottomStart),
+            modifier = Modifier.align(Alignment.BottomStart).padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Browse", color = contentColor, fontSize = 20.sp, fontWeight = FontWeight.Bold)
