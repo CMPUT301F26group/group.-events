@@ -180,11 +180,11 @@ fun LogEntry(
 ) {
     val shape = MaterialTheme.shapes.medium
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Row {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-            AppMutedText(status)
+            if (status.isNotBlank()) AppMutedText(status)
         }
-        AppMutedText(subtitle)
+        if (subtitle.isNotBlank()) AppMutedText(subtitle)
         Text(
             text = body,
             modifier = if (boxed) {
@@ -197,6 +197,6 @@ fun LogEntry(
                 Modifier
             },
         )
-        AppMutedText(time)
+        if (time.isNotBlank()) AppMutedText(time)
     }
 }

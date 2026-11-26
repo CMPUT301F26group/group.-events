@@ -97,9 +97,21 @@ open class AdminRepository(
     /** Every logged owner to entrant message, newest first. */
     open suspend fun getMessages(): List<MessageLog> {
         val docs = messages.get().await().toObjects(MessageDoc::class.java)
-        val logs = docs.map {
-            MessageLog(it.id, it.senderName, it.recipientName, it.campsiteName, it.reservationId, it.message, toMillis(it.sentAt))
+        if (docs.isEmpty()) return emptyList()
+
+        // Both owners and entrants can post to the messages collection for a reservation,
+        // so exclude messages sent by the reservation's entrant to the owner (US 03.12.01).
+        val entrantByReservation = reservations.get().await().documents.associate { doc ->
+            doc.id to doc.getString("entrantId").orEmpty()
         }
+        val logs = docs
+            .filter { isOwnerToEntrantMessage(it, entrantByReservation[it.reservationId]) }
+            .map {
+                MessageLog(
+                    it.id, it.senderName, it.recipientName, it.campsiteName, it.reservationId,
+                    it.message, toMillis(it.sentAt), it.senderId, it.recipientId,
+                )
+            }
         return logs.sortedByDescending { it.sentAt }
     }
 
@@ -183,3 +195,13 @@ open class AdminRepository(
     /** [time] in milliseconds since 1970, or 0 if it is missing. */
     private fun toMillis(time: Timestamp?): Long = time?.toDate()?.time ?: 0L
 }
+
+/**
+ * True when [doc] was sent by a campsite owner to an entrant (US 03.12.01).
+ * Excludes messages sent by the reservation's entrant to the owner, while preserving
+ * messages when the same device acts as both roles or the reservation no longer exists.
+ */
+internal fun isOwnerToEntrantMessage(doc: MessageDoc, reservationEntrantId: String?): Boolean =
+    reservationEntrantId.isNullOrEmpty() ||
+        doc.senderId != reservationEntrantId ||
+        doc.recipientId == reservationEntrantId

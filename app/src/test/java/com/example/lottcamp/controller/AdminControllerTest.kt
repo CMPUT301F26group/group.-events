@@ -1,14 +1,19 @@
 package com.example.lottcamp.controller
 
+import com.example.lottcamp.data.MessageDoc
 import com.example.lottcamp.domain.ImageType
+import com.example.lottcamp.domain.MessageLog
+import com.example.lottcamp.domain.NotificationLog
 import com.example.lottcamp.domain.UserProfile
 import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.repository.SampleAdminRepository
+import com.example.lottcamp.repository.isOwnerToEntrantMessage
 import com.example.lottcamp.ui.components.initials
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -140,6 +145,56 @@ class AdminControllerTest {
         assertEquals(2, controller.searchMessages("jamie").size)
         assertEquals(1, controller.searchMessages("meadow").size)
         assertEquals(1, controller.searchMessages("sam patel").size)
+        assertEquals(listOf("MSG-1"), controller.searchMessages("RES-2038").map { it.id })
+        assertEquals(listOf("MSG-3"), controller.searchMessages("north gate").map { it.id })
+    }
+
+    @Test
+    fun refreshLogs_fillsBlankNamesAndRefreshesIndependently() {
+        var extraNotifications = listOf(
+            NotificationLog("NTF-BLANK", "Lottery result", "", null, "", "USR-1042", "You won!", 1_794_500_000_000),
+            NotificationLog("NTF-OWNER", "Update", "", "USR-0871", "", "USR-UNKNOWN", "Gate open", 1_794_499_000_000),
+        )
+        var extraMessages = listOf(
+            MessageLog("MSG-BLANK", "", "", "Pine Ridge Camp", "abcdef1234", "See you at 3", 1_794_500_000_000, "USR-0871", "USR-1042"),
+        )
+        val repo = object : SampleAdminRepository() {
+            override suspend fun getNotifications() = extraNotifications
+            override suspend fun getMessages() = extraMessages
+        }
+        val fresh = AdminController(repo, CoroutineScope(Dispatchers.Unconfined))
+        fresh.refresh()
+
+        assertEquals(NotificationLog.SYSTEM_SENDER, fresh.notifications[0].sender)
+        assertTrue(fresh.notifications[0].fromSystem)
+        assertEquals("Alex Morgan", fresh.notifications[0].recipient)
+        assertEquals("Jamie Chen", fresh.notifications[1].sender)
+        assertFalse(fresh.notifications[1].fromSystem)
+        assertEquals("USR-UNKNOWN", fresh.notifications[1].recipient)
+
+        assertEquals("Jamie Chen", fresh.messages[0].sender)
+        assertEquals("Alex Morgan", fresh.messages[0].recipient)
+        assertEquals(listOf("MSG-BLANK"), fresh.searchMessages("RES-1234").map { it.id })
+        assertEquals(listOf("MSG-BLANK"), fresh.searchMessages("USR-1042").map { it.id })
+
+        extraNotifications = extraNotifications.take(1)
+        extraMessages = emptyList()
+        fresh.refreshNotifications()
+        fresh.refreshMessages()
+        assertEquals(1, fresh.notifications.size)
+        assertTrue(fresh.messages.isEmpty())
+    }
+
+    @Test
+    fun isOwnerToEntrantMessage_filtersEntrantRepliesOnly() {
+        val ownerToEntrant = MessageDoc(senderId = "owner-1", recipientId = "entrant-1", reservationId = "res-1")
+        val entrantToOwner = MessageDoc(senderId = "entrant-1", recipientId = "owner-1", reservationId = "res-1")
+        val sameDevice = MessageDoc(senderId = "dev-1", recipientId = "dev-1", reservationId = "res-2")
+
+        assertTrue(isOwnerToEntrantMessage(ownerToEntrant, reservationEntrantId = "entrant-1"))
+        assertFalse(isOwnerToEntrantMessage(entrantToOwner, reservationEntrantId = "entrant-1"))
+        assertTrue(isOwnerToEntrantMessage(sameDevice, reservationEntrantId = "dev-1"))
+        assertTrue(isOwnerToEntrantMessage(entrantToOwner, reservationEntrantId = null))
     }
 
     @Test

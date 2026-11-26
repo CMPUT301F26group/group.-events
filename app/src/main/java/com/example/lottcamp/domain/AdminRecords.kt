@@ -103,7 +103,7 @@ data class NotificationLog(
     val status: String = "Delivered",
 ) {
     val fromSystem: Boolean
-        get() = sender == SYSTEM_SENDER
+        get() = senderId.isNullOrBlank() || sender.equals(SYSTEM_SENDER, ignoreCase = true)
 
     companion object {
         const val SYSTEM_SENDER = "System"
@@ -120,6 +120,8 @@ data class NotificationLog(
  * @property reservationId Reservation the message is about.
  * @property message Message body.
  * @property sentAt When it was sent, in milliseconds since 1970, or 0 if unknown.
+ * @property senderId User ID of the owner who sent the message.
+ * @property recipientId User ID of the entrant who received it.
  */
 data class MessageLog(
     val id: String,
@@ -129,6 +131,8 @@ data class MessageLog(
     val reservationId: String,
     val message: String,
     val sentAt: Long,
+    val senderId: String = "",
+    val recipientId: String = "",
 )
 
 /**

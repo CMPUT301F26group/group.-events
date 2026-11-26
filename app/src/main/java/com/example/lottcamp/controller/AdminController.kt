@@ -27,7 +27,12 @@ import kotlinx.coroutines.launch
  * @param data Where the data is read from and removed.
  * @param scope Runs database work in the background so the screen doesn't freeze.
  */
-class AdminController(private val data: AdminRepository, private val scope: CoroutineScope, val imageRepo: ImageRepository = ImageRepository()) {
+class AdminController(
+    private val data: AdminRepository,
+    private val scope: CoroutineScope,
+    imageRepoProvider: () -> ImageRepository = { ImageRepository() },
+) {
+    val imageRepo: ImageRepository by lazy(imageRepoProvider)
 
     /** Every user account. */
     val users = mutableStateListOf<UserProfile>()
@@ -91,7 +96,25 @@ class AdminController(private val data: AdminRepository, private val scope: Coro
             reviews.clear()
             reviews.addAll(newReviews)
             notifications.clear()
+            notifications.addAll(fillNotificationNames(newNotifications))
+            messages.clear()
+            messages.addAll(fillMessageNames(newMessages))
+        }
+    }
+
+    /** Reloads the notification log from the database. */
+    fun refreshNotifications() {
+        runInBackground("Couldn't load notifications") {
+            val newNotifications = fillNotificationNames(data.getNotifications())
+            notifications.clear()
             notifications.addAll(newNotifications)
+        }
+    }
+
+    /** Reloads the message log from the database. */
+    fun refreshMessages() {
+        runInBackground("Couldn't load messages") {
+            val newMessages = fillMessageNames(data.getMessages())
             messages.clear()
             messages.addAll(newMessages)
         }
@@ -125,9 +148,12 @@ class AdminController(private val data: AdminRepository, private val scope: Coro
                 matches(query, it.sender, it.recipient, it.title, it.message, it.recipientId, it.senderId.orEmpty())
         }
 
-    /** Messages whose sender, recipient or campsite contains [query]. */
+    /** Messages whose sender, recipient, campsite, reservation or text contains [query]. */
     fun searchMessages(query: String) =
-        messages.filter { matches(query, it.sender, it.recipient, it.campsiteName) }
+        messages.filter {
+            val code = if (it.reservationId.isNotBlank()) reservationCode(it.reservationId) else ""
+            matches(query, it.sender, it.recipient, it.campsiteName, it.reservationId, code, it.message, it.senderId, it.recipientId)
+        }
 
     /** The user with [id], or null if there is none. */
     fun user(id: String) = users.find { it.id == id }
@@ -252,4 +278,30 @@ class AdminController(private val data: AdminRepository, private val scope: Coro
     /** True when [query] is blank or any of [fields] contains it, ignoring case. */
     private fun matches(query: String, vararg fields: String) =
         query.isBlank() || fields.any { it.contains(query.trim(), ignoreCase = true) }
+
+    /** Fills in missing sender or recipient names using loaded user profiles or IDs. */
+    private fun fillNotificationNames(logs: List<NotificationLog>): List<NotificationLog> =
+        logs.map { log ->
+            val sender = log.sender.ifBlank {
+                if (log.fromSystem) NotificationLog.SYSTEM_SENDER
+                else resolveName(log.senderId, NotificationLog.SYSTEM_SENDER)
+            }
+            val recipient = log.recipient.ifBlank { resolveName(log.recipientId, "Unknown") }
+            if (sender == log.sender && recipient == log.recipient) log
+            else log.copy(sender = sender, recipient = recipient)
+        }
+
+    /** Fills in missing sender or recipient names using loaded user profiles or IDs. */
+    private fun fillMessageNames(logs: List<MessageLog>): List<MessageLog> =
+        logs.map { log ->
+            val sender = log.sender.ifBlank { resolveName(log.senderId, "Unknown") }
+            val recipient = log.recipient.ifBlank { resolveName(log.recipientId, "Unknown") }
+            if (sender == log.sender && recipient == log.recipient) log
+            else log.copy(sender = sender, recipient = recipient)
+        }
+
+    private fun resolveName(userId: String?, fallback: String): String {
+        val id = userId?.takeIf { it.isNotBlank() } ?: return fallback
+        return user(id)?.name?.takeIf { it.isNotBlank() } ?: id
+    }
 }

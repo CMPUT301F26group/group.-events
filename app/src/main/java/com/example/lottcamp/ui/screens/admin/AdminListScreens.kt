@@ -17,6 +17,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.example.lottcamp.controller.AdminController
+import com.example.lottcamp.controller.reservationCode
 import com.example.lottcamp.domain.Campsite
 import com.example.lottcamp.domain.ImageType
 import com.example.lottcamp.domain.UploadedImage
@@ -194,6 +196,7 @@ fun AdminImagesScreen(controller: AdminController, onBack: () -> Unit, onImageCl
 fun AdminNotificationsScreen(controller: AdminController, onBack: () -> Unit, initialQuery: String = "") {
     var query by rememberSaveable { mutableStateOf(initialQuery) }
     var filter by rememberSaveable { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) { controller.refreshNotifications() }
     val logs = controller.searchNotifications(query, notificationFilters[filter].second)
 
     AdminListPage(
@@ -206,10 +209,14 @@ fun AdminNotificationsScreen(controller: AdminController, onBack: () -> Unit, in
         selectedFilter = filter,
         onFilterSelect = { filter = it },
     ) {
-        items(logs, key = { it.id }) { log ->
-            LogEntry(log.title, "${log.sender} → ${log.recipient}", log.message, formatTime(log.sentAt), status = log.status)
-            // Gap above the line matches the list's 16dp gap below it
-            HorizontalDivider(Modifier.padding(top = 16.dp), color = MaterialTheme.colorScheme.outline)
+        if (logs.isEmpty()) {
+            item { AppMutedText("No notifications found.") }
+        } else {
+            items(logs, key = { it.id }) { log ->
+                LogEntry(log.title, "${log.sender} → ${log.recipient}", log.message, formatTime(log.sentAt), status = log.status)
+                // Gap above the line matches the list's 16dp gap below it
+                HorizontalDivider(Modifier.padding(top = 16.dp), color = MaterialTheme.colorScheme.outline)
+            }
         }
     }
 }
@@ -223,6 +230,7 @@ fun AdminNotificationsScreen(controller: AdminController, onBack: () -> Unit, in
 @Composable
 fun AdminMessagesScreen(controller: AdminController, onBack: () -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }
+    LaunchedEffect(Unit) { controller.refreshMessages() }
     val logs = controller.searchMessages(query)
 
     AdminListPage(
@@ -232,14 +240,22 @@ fun AdminMessagesScreen(controller: AdminController, onBack: () -> Unit) {
         onQueryChange = { query = it },
         placeholder = "Search sender, recipient or campsite",
     ) {
-        items(logs, key = { it.id }) { log ->
-            LogEntry(
-                title = "${log.sender} → ${log.recipient}",
-                subtitle = "${log.campsiteName} · ${log.reservationId}",
-                body = log.message,
-                time = formatTime(log.sentAt),
-                boxed = true,
-            )
+        if (logs.isEmpty()) {
+            item { AppMutedText("No messages found.") }
+        } else {
+            items(logs, key = { it.id }) { log ->
+                val reservationLabel = if (log.reservationId.isNotBlank()) reservationCode(log.reservationId) else ""
+                val subtitle = listOf(log.campsiteName, reservationLabel)
+                    .filter { it.isNotBlank() }
+                    .joinToString(" · ")
+                LogEntry(
+                    title = "${log.sender} → ${log.recipient}",
+                    subtitle = subtitle,
+                    body = log.message,
+                    time = formatTime(log.sentAt),
+                    boxed = true,
+                )
+            }
         }
     }
 }
