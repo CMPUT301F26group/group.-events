@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -59,15 +60,26 @@ fun EntrantCampsiteSearchScreen(
     roles: List<UserRole> = emptyList(),
     onRoleSelected: (UserRole) -> Unit = {},
 ) {
+    if (controller.isQrScannerOpen) {
+        EntrantQrScannerScreen(
+            onQrScanned = controller::onQrCodeScanned,
+            onClose = controller::dismissQrScanner,
+            showNotFoundDialog = controller.qrCampsiteNotFound,
+            onDismissNotFound = controller::dismissQrNotFound,
+            modifier = modifier.fillMaxSize(),
+        )
+        return
+    }
+
     val imageRepo = remember { ImageRepository() }
     val currentFilter = controller.filter
     val displayedResults = controller.displayedResults
     val hasActiveFilters = currentFilter.locationName != null ||
-        currentFilter.name != null ||
-        (currentFilter.startDate != null && currentFilter.endDate != null) ||
-        currentFilter.minOccupancy != null ||
-        currentFilter.maxPricePerNight != null ||
-        currentFilter.tags.isNotEmpty()
+            currentFilter.name != null ||
+            (currentFilter.startDate != null && currentFilter.endDate != null) ||
+            currentFilter.minOccupancy != null ||
+            currentFilter.maxPricePerNight != null ||
+            currentFilter.tags.isNotEmpty()
 
     Column(
         modifier = modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
