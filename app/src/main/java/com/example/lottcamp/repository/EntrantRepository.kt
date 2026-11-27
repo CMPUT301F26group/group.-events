@@ -2,12 +2,14 @@ package com.example.lottcamp.repository
 
 import com.example.lottcamp.data.EntrantDoc
 import com.example.lottcamp.data.ReservationStatus
+import com.example.lottcamp.data.ReviewDoc
 import com.example.lottcamp.domain.Campsite
 import com.example.lottcamp.domain.Entrant
 import com.example.lottcamp.domain.Lottery
 import com.example.lottcamp.domain.LotteryEntry
 import com.example.lottcamp.domain.Reservation
 import com.google.firebase.Firebase
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
@@ -33,6 +35,7 @@ open class EntrantRepository(
 
     private val db by lazy(dbProvider)
     private val entrants by lazy { db.collection("entrants") }
+    private val reviews by lazy { db.collection("reviews") }
     private val campsiteRepo by lazy { CampsiteRepository(db) }
     private val reservationRepo by lazy { ReservationRepository(db) }
     private val lotteryEntryRepo by lazy { LotteryEntryRepository(db) }
@@ -81,6 +84,71 @@ open class EntrantRepository(
     /** The campsite with [campsiteId], or null if it does not exist. */
     open suspend fun getCampsite(campsiteId: String): Campsite? =
         campsiteRepo.getCampsiteById(campsiteId)
+
+    // --- Reviews ---
+
+    /**
+     * Every review [entrantId] has written.
+     *
+     * Queries by author only so Firestore does not need a composite index. An entrant has at
+     * most one review per campsite.
+     */
+    open suspend fun getReviewsByEntrant(entrantId: String): List<ReviewDoc> =
+        reviews.whereEqualTo("authorId", entrantId).get().await()
+            .toObjects(ReviewDoc::class.java)
+
+    /** [entrantId]'s review of [campsiteId], or null if they have not reviewed it yet. */
+    open suspend fun getReview(campsiteId: String, entrantId: String): ReviewDoc? =
+        getReviewsByEntrant(entrantId).firstOrNull { it.campsiteId == campsiteId }
+
+    /** IDs of the campsites [entrantId] has already reviewed. */
+    open suspend fun getReviewedCampsiteIds(entrantId: String): Set<String> =
+        getReviewsByEntrant(entrantId).map { it.campsiteId }.toSet()
+
+    /**
+     * Stores [rating] and [comment] as [entrantId]'s review of [campsiteId].
+     *
+     * The rating is saved as a float and the comment as a string. The campsite's
+     * `ratingSum` / `ratingCount` are recalculated from every review in the same batch, so they
+     * always match the reviews even if they had drifted before. An entrant has at most one
+     * review per campsite; submitting again updates the existing review instead of adding another.
+     */
+    open suspend fun submitReview(
+        campsiteId: String,
+        entrantId: String,
+        rating: Double,
+        comment: String,
+    ) {
+        require(campsiteId.isNotBlank()) { "Campsite ID cannot be blank" }
+        require(entrantId.isNotBlank()) { "Entrant ID cannot be blank" }
+        require(rating in 1.0..5.0) { "Rating must be between 1.0 and 5.0" }
+        val entrant = getEntrantByAndroidId(entrantId)
+        val campsiteReviews = reviews.whereEqualTo("campsiteId", campsiteId)
+            .get().await().toObjects(ReviewDoc::class.java)
+        val existing = campsiteReviews.firstOrNull { it.authorId == entrantId }
+        val reviewId = existing?.id?.takeIf { it.isNotBlank() } ?: "$campsiteId-$entrantId"
+        val review = ReviewDoc(
+            id = reviewId,
+            campsiteId = campsiteId,
+            authorId = entrantId,
+            authorName = entrant?.name?.takeIf { it.isNotBlank() }
+                ?: existing?.authorName?.takeIf { it.isNotBlank() }
+                ?: "Anonymous",
+            rating = rating,
+            comment = comment.trim(),
+            createdAt = existing?.createdAt ?: Timestamp.now(),
+        )
+        val otherRatings = campsiteReviews.filter { it.authorId != entrantId }
+
+        val batch = db.batch()
+        batch.set(reviews.document(reviewId), review)
+        batch.update(
+            db.collection("campsites").document(campsiteId),
+            "ratingSum", otherRatings.sumOf { it.rating } + rating,
+            "ratingCount", otherRatings.size + 1,
+        )
+        batch.commit().await()
+    }
 
     // --- Reservations ---
 

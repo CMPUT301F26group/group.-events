@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -45,6 +46,9 @@ import com.example.lottcamp.ui.components.AppRatingBar
 import com.example.lottcamp.ui.components.AppSectionTitle
 import com.example.lottcamp.ui.components.AppTopBar
 import com.example.lottcamp.ui.theme.LottCampTheme
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 /**
  * Lets an entrant rate a campsite and optionally leave a written review.
@@ -56,6 +60,7 @@ import com.example.lottcamp.ui.theme.LottCampTheme
  * @param navController Used for the back arrow and after submitting.
  * @param modifier Applied to the whole screen.
  * @param campsiteId Campsite being rated.
+ * @param entrantId Android ID of the entrant writing the review.
  * @param data Where the campsite comes from. Tests and previews pass
  *   [com.example.lottcamp.repository.SampleEntrantRepository].
  */
@@ -64,15 +69,36 @@ fun EntrantCampsiteRatingScreen(
     navController: NavController,
     modifier: Modifier = Modifier,
     campsiteId: String,
+    entrantId: String = "",
     data: EntrantRepository = EntrantRepository(),
 ) {
     val repository = remember { data }
+    val scope = rememberCoroutineScope()
     var campsite by remember { mutableStateOf<Campsite?>(null) }
     var rating by rememberSaveable { mutableIntStateOf(0) }
     var review by rememberSaveable { mutableStateOf("") }
+    var submitting by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var isEditing by remember { mutableStateOf(false) }
+    var loadedExisting by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(campsiteId, repository) {
-        campsite = repository.getCampsite(campsiteId)
+    LaunchedEffect(campsiteId, entrantId, repository) {
+        val loadedCampsite = repository.getCampsite(campsiteId)
+        val existing = try {
+            repository.getReview(campsiteId, entrantId)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            error = "Couldn't load your existing review: ${e.message}"
+            null
+        }
+        isEditing = existing != null
+        if (existing != null && !loadedExisting) {
+            rating = existing.rating.roundToInt()
+            review = existing.comment
+            loadedExisting = true
+        }
+        campsite = loadedCampsite
     }
 
     val currentCampsite = campsite
@@ -93,13 +119,31 @@ fun EntrantCampsiteRatingScreen(
         onRatingChange = { rating = it },
         review = review,
         onReviewChange = { review = it },
+        submitting = submitting,
+        error = error,
+        isEditing = isEditing,
         modifier = modifier,
         onBack = { navController.popBackStack() },
         onSubmit = {
-            // `rating` and `review` hold the current selection here.
-            // TODO: Save the review and update the campsite's rating in Firestore.
-            navController.navigate(EntrantRoutes.ratingSubmitted(campsiteId, rating)) {
-                popUpTo(EntrantRoutes.RATE_CAMPSITE) { inclusive = true }
+            if (rating > 0 && !submitting) {
+                val submittedRating = rating
+                val submittedReview = review
+                submitting = true
+                error = null
+                scope.launch {
+                    try {
+                        repository.submitReview(campsiteId, entrantId, submittedRating.toDouble(), submittedReview)
+                        navController.navigate(EntrantRoutes.ratingSubmitted(campsiteId, submittedRating)) {
+                            popUpTo(EntrantRoutes.RATE_CAMPSITE) { inclusive = true }
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        error = "Couldn't submit your rating: ${e.message}"
+                    } finally {
+                        submitting = false
+                    }
+                }
             }
         },
     )
@@ -115,6 +159,9 @@ fun EntrantCampsiteRatingScreen(
  * @param onRatingChange Called with the tapped star's 1-based index.
  * @param review Current review text.
  * @param onReviewChange Called with the new review text on every edit.
+ * @param submitting Whether the review is currently being uploaded.
+ * @param error Message shown when the last upload failed, or null.
+ * @param isEditing Whether the entrant is changing a review they already left.
  * @param modifier Applied to the whole screen.
  * @param onBack Invoked when the back arrow is tapped.
  * @param onSubmit Invoked when the submit button is tapped.
@@ -127,6 +174,9 @@ fun RateCampsiteContent(
     onRatingChange: (Int) -> Unit,
     review: String,
     onReviewChange: (String) -> Unit,
+    submitting: Boolean = false,
+    error: String? = null,
+    isEditing: Boolean = false,
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
     onSubmit: () -> Unit = {},
@@ -136,7 +186,7 @@ fun RateCampsiteContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
-        AppTopBar("Rate a campsite", onBack)
+        AppTopBar(if (isEditing) "Edit review" else "Rate a campsite", onBack)
 
         Column(
             modifier = Modifier
@@ -181,7 +231,7 @@ fun RateCampsiteContent(
                 ) {
                     AppRatingBar(
                         rating = rating.toFloat(),
-                        readOnly = false,
+                        readOnly = submitting,
                         starSize = 48.dp,
                         onRatingChange = onRatingChange,
                     )
@@ -198,6 +248,7 @@ fun RateCampsiteContent(
             OutlinedTextField(
                 value = review,
                 onValueChange = onReviewChange,
+                enabled = !submitting,
                 label = { Text("Review (optional)") },
                 placeholder = { Text("Share your experience...") },
                 minLines = 7,
@@ -205,13 +256,26 @@ fun RateCampsiteContent(
             )
         }
 
+        error?.let {
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
+
         AppButton(
-            text = "Submit rating",
+            text = when {
+                submitting -> "Submitting..."
+                isEditing -> "Update review"
+                else -> "Submit rating"
+            },
             onClick = onSubmit,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            enabled = rating > 0,
+            enabled = rating > 0 && !submitting,
         )
     }
 }

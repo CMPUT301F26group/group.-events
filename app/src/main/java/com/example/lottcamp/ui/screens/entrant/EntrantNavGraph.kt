@@ -36,6 +36,8 @@ import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.repository.EntrantRepository
 import com.example.lottcamp.ui.components.AppNavBar
 import com.example.lottcamp.ui.components.AppNavItem
+import com.example.lottcamp.ui.screens.ProfileRoutes
+import com.example.lottcamp.ui.screens.profileRoutes
 
 /**
  * Navigation graph for all entrant screens, starting at [EntrantRoutes.SEARCH], with a bottom
@@ -91,8 +93,10 @@ fun EntrantNavGraph(
         )
     }
 
-    LaunchedEffect(entrantId) {
-        searchController.refreshResults()
+    // Reload the campsites whenever the search screen is shown again so ratings left on the
+    // details screen appear on the listing cards right away.
+    LaunchedEffect(currentRoute) {
+        if (currentRoute == EntrantRoutes.SEARCH) searchController.refreshResults()
     }
 
     val activeError = searchController.error ?: bookingsController.error
@@ -154,9 +158,9 @@ fun EntrantNavGraph(
                     icon = Icons.AutoMirrored.Outlined.Chat,
                 )
                 AppNavItem(
-                    selected = currentRoute == EntrantRoutes.PROFILE,
+                    selected = ProfileRoutes.isProfileRoute(currentRoute),
                     onClick = {
-                        navController.navigate(EntrantRoutes.PROFILE) {
+                        navController.navigate(ProfileRoutes.PROFILE) {
                             launchSingleTop = true
                         }
                     },
@@ -190,9 +194,7 @@ fun EntrantNavGraph(
             composable(EntrantRoutes.MESSAGES) {
                 EntrantMessagesScreen(navController, Modifier)
             }
-            composable(EntrantRoutes.PROFILE) {
-                EntrantProfileScreen(navController, Modifier)
-            }
+            profileRoutes(navController, userId = entrantId, entrantRepo = repository)
             composable(
                 route = EntrantRoutes.CAMPSITE_DETAILS,
                 arguments = listOf(navArgument("campsiteId") { type = NavType.StringType }),
@@ -217,7 +219,7 @@ fun EntrantNavGraph(
                 arguments = listOf(navArgument("campsiteId") { type = NavType.StringType }),
             ) { entry ->
                 val campsiteId = getArg(entry, "campsiteId")
-                EntrantCampsiteRatingScreen(navController, Modifier, campsiteId, repository)
+                EntrantCampsiteRatingScreen(navController, Modifier, campsiteId, entrantId, repository)
             }
             composable(
                 route = EntrantRoutes.RATING_SUBMITTED,

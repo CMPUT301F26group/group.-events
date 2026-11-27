@@ -30,6 +30,8 @@ import com.example.lottcamp.domain.UserRole
 import com.example.lottcamp.repository.AdminRepository
 import com.example.lottcamp.ui.components.AppNavBar
 import com.example.lottcamp.ui.components.AppNavItem
+import com.example.lottcamp.ui.screens.ProfileRoutes
+import com.example.lottcamp.ui.screens.profileRoutes
 
 /**
  * Navigation between all admin screens, starting at the admin home screen, with a bottom nav bar.
@@ -97,10 +99,11 @@ fun AdminNavGraph(
                     label = "Messages",
                     icon = Icons.AutoMirrored.Outlined.Chat,
                 )
-                // TODO: no admin profile screen yet
                 AppNavItem(
-                    selected = false,
-                    onClick = {},
+                    selected = ProfileRoutes.isProfileRoute(currentRoute),
+                    onClick = {
+                        navController.navigate(ProfileRoutes.PROFILE) { launchSingleTop = true }
+                    },
                     label = "Profile",
                     icon = Icons.Outlined.Person,
                 )
@@ -144,6 +147,7 @@ fun AdminNavGraph(
             composable(AdminRoutes.IMAGE) {
                 AdminImageDetailScreen(controller, getId(it), back) { userId -> go(AdminRoutes.user(userId)) }
             }
+            profileRoutes(navController, imageRepo = controller.imageRepo)
         }
     }
 }
