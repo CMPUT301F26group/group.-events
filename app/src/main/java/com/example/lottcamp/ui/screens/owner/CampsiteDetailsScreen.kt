@@ -53,6 +53,7 @@ fun CampsiteDetailsScreen(
     onEdit: () -> Unit,
     onCreateLottery: () -> Unit,
     onBack: () -> Unit,
+    onMapClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
@@ -69,7 +70,7 @@ fun CampsiteDetailsScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 AppPhotoBox(imageId = imageId, image = image, modifier = Modifier.weight(1f))
-                AppMapBox(modifier = Modifier.weight(1f))
+                AppMapBox(onClick = onMapClick, modifier = Modifier.weight(1f))
             }
 
             Spacer(Modifier.height(8.dp))
@@ -174,6 +175,7 @@ fun CampsiteDetailsScreenPreview() {
             onEdit = {},
             onCreateLottery = {},
             onBack = {},
+            onMapClick = null,
             modifier = Modifier.background(MaterialTheme.colorScheme.background),
         )
     }

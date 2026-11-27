@@ -1,5 +1,10 @@
 package com.example.lottcamp.ui.screens.owner
 
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
@@ -13,10 +18,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import coil3.compose.AsyncImage
 import com.example.lottcamp.controller.CampsiteDetailsController
 import com.example.lottcamp.controller.CampsiteFormController
 import com.example.lottcamp.controller.ChatController
@@ -50,6 +59,7 @@ import com.example.lottcamp.ui.components.MainTab
  * @param onRoleChange Called when the user picks a different role.
  * @param data Where the campsites come from. Tests can pass a fake.
  */
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun OwnerNavGraph(
     ownerId: String,
@@ -66,6 +76,7 @@ fun OwnerNavGraph(
     val messageRepo = remember { MessageRepository() }
     val ownerRepo = remember { CampsiteOwnerRepository() }
     val imageRepo = remember { ImageRepository() }
+    val appContext = LocalContext.current.applicationContext
     val storedImage: @Composable (String) -> Unit = { id ->
         AppStoredImage(
             imageId = id,
@@ -149,13 +160,18 @@ fun OwnerNavGraph(
                 )
             }
             composable(OwnerRoutes.REGISTER_CAMPSITE) {
-                val screen = remember { CampsiteFormController(controller, ownerId, null, back) }
+                val screen = remember {
+                    CampsiteFormController(controller, ownerId, imageRepo, appContext, scope, null, back)
+                }
                 CampsiteForm(screen, storedImage, Modifier.padding(innerPadding))
             }
             composable(OwnerRoutes.CAMPSITE) { entry ->
                 val id = entry.arguments?.getString("id") ?: ""
                 val screen = remember(id) { CampsiteDetailsController(controller, id, go, back) }
                 val campsite = screen.campsite ?: return@composable // still loading
+                val uriHandler = LocalUriHandler.current
+                val lat = campsite.latitude
+                val lon = campsite.longitude
                 CampsiteDetailsScreen(
                     name = campsite.name,
                     imageId = campsite.imageId,
@@ -172,13 +188,18 @@ fun OwnerNavGraph(
                     onEdit = screen::onEditClick,
                     onCreateLottery = screen::onLotteryClick,
                     onBack = screen::onBackClick,
+                    onMapClick = if (lat != null && lon != null) {
+                        { uriHandler.openUri("https://www.google.com/maps/search/?api=1&query=$lat,$lon") }
+                    } else null,
                     modifier = Modifier.padding(innerPadding),
                 )
             }
             composable(OwnerRoutes.EDIT_CAMPSITE) { entry ->
                 val id = entry.arguments?.getString("id") ?: ""
                 val campsite = controller.campsite(id) ?: return@composable // still loading
-                val screen = remember(id) { CampsiteFormController(controller, ownerId, campsite, back) }
+                val screen = remember(id) {
+                    CampsiteFormController(controller, ownerId, imageRepo, appContext, scope, campsite, back)
+                }
                 CampsiteForm(screen, storedImage, Modifier.padding(innerPadding))
             }
             composable(OwnerRoutes.CREATE_LOTTERY) { entry ->
@@ -294,17 +315,33 @@ fun OwnerNavGraph(
 }
 
 /** Connects [CampsiteFormScreen] to its controller. Shared by register and edit. */
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun CampsiteForm(
     screen: CampsiteFormController,
-    image: @Composable (String) -> Unit,
+    stored: @Composable (String) -> Unit,
     modifier: Modifier,
 ) {
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) screen.onPhotoPicked(uri)
+    }
+    val picked = screen.pickedUri
+
     CampsiteFormScreen(
         title = screen.title,
         submitText = screen.submitText,
-        imageId = screen.imageId,
-        image = image,
+        // A freshly picked photo is previewed straight from its uri, the stored one comes from Firestore
+        imageId = picked?.toString() ?: screen.imageId,
+        image = if (picked != null) {
+            { uri ->
+                AsyncImage(
+                    model = uri,
+                    contentDescription = "Selected photo",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        } else stored,
         name = screen.name,
         onNameChange = screen::onNameChange,
         nameError = screen.nameError,
@@ -321,15 +358,30 @@ private fun CampsiteForm(
         availableTags = screen.availableTags,
         selectedTags = screen.selectedTags,
         onTagClick = screen::onTagClick,
-        onPhotoClick = screen::onPhotoClick,
+        onPhotoClick = {
+            picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        },
         onMapClick = screen::onMapClick,
         onBack = screen::onBackClick,
         onSubmit = screen::onSubmitClick,
         modifier = modifier,
     )
+
+    if (screen.mapDialogOpen) {
+        MapLocationDialog(
+            latitude = screen.latitudeText,
+            onLatitudeChange = screen::onLatitudeChange,
+            longitude = screen.longitudeText,
+            onLongitudeChange = screen::onLongitudeChange,
+            error = screen.mapError,
+            onConfirm = screen::onMapConfirm,
+            onDismiss = screen::onMapDismiss,
+        )
+    }
 }
 
 /** Connects [LotteryFormScreen] to its controller. Shared by create and edit. */
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun LotteryForm(screen: LotteryFormController, modifier: Modifier) {
     LotteryFormScreen(
