@@ -1,6 +1,7 @@
 package com.example.lottcamp.ui.screens.owner
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,13 +17,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -54,8 +59,20 @@ fun CampsiteDetailsScreen(
     onCreateLottery: () -> Unit,
     onBack: () -> Unit,
     onMapClick: (() -> Unit)?,
+    qrBitmap: ImageBitmap?,
+    notice: String?,
+    onDismissNotice: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    notice?.let {
+        AlertDialog(
+            onDismissRequest = onDismissNotice,
+            confirmButton = { TextButton(onClick = onDismissNotice) { Text("OK") } },
+            title = { Text("QR code") },
+            text = { Text(it) },
+        )
+    }
+
     Column(modifier = modifier.fillMaxSize()) {
         AppTopBar(title = name, onBack = onBack)
 
@@ -94,8 +111,17 @@ fun CampsiteDetailsScreen(
                         modifier = Modifier
                             .size(72.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.background),
-                    )
+                            .background(Color.White),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (qrBitmap != null) {
+                            Image(
+                                bitmap = qrBitmap,
+                                contentDescription = "Campsite QR code",
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
+                    }
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
@@ -176,6 +202,9 @@ fun CampsiteDetailsScreenPreview() {
             onCreateLottery = {},
             onBack = {},
             onMapClick = null,
+            qrBitmap = null,
+            notice = null,
+            onDismissNotice = {},
             modifier = Modifier.background(MaterialTheme.colorScheme.background),
         )
     }

@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
@@ -49,8 +50,6 @@ import com.example.lottcamp.repository.ReservationRepository
 import com.example.lottcamp.ui.components.AppBottomNavOwner
 import com.example.lottcamp.ui.components.AppStoredImage
 import com.example.lottcamp.ui.components.MainTab
-import com.example.lottcamp.ui.screens.ProfileRoutes
-import com.example.lottcamp.ui.screens.profileRoutes
 
 /**
  * Navigation between all owner screens, starting at the owner home screen.
@@ -94,10 +93,9 @@ fun OwnerNavGraph(
 
     // The highlighted tab follows the screen that is showing
     val route = navController.currentBackStackEntryAsState().value?.destination?.route
-    val tab = when {
-        route == OwnerRoutes.RESERVATIONS -> MainTab.Bookings
-        route == OwnerRoutes.NOTIFICATIONS || route == OwnerRoutes.CHAT -> MainTab.Messages
-        ProfileRoutes.isProfileRoute(route) -> MainTab.Profile
+    val tab = when (route) {
+        OwnerRoutes.RESERVATIONS -> MainTab.Bookings
+        OwnerRoutes.NOTIFICATIONS, OwnerRoutes.CHAT -> MainTab.Messages
         else -> MainTab.Explore
     }
 
@@ -141,10 +139,7 @@ fun OwnerNavGraph(
                                 }
                             }
                         }
-                        MainTab.Profile -> navController.navigate(ProfileRoutes.PROFILE) {
-                            popUpTo(OwnerRoutes.MY_CAMPSITES)
-                            launchSingleTop = true
-                        }
+                        MainTab.Profile -> {} // no owner profile screen in the design
                     }
                 },
             )
@@ -173,11 +168,14 @@ fun OwnerNavGraph(
             }
             composable(OwnerRoutes.CAMPSITE) { entry ->
                 val id = entry.arguments?.getString("id") ?: ""
-                val screen = remember(id) { CampsiteDetailsController(controller, id, go, back) }
+                val screen = remember(id) {
+                    CampsiteDetailsController(controller, id, appContext, scope, go, back)
+                }
                 val campsite = screen.campsite ?: return@composable // still loading
                 val uriHandler = LocalUriHandler.current
                 val lat = campsite.latitude
                 val lon = campsite.longitude
+                val qr = remember(id) { screen.qrBitmap.asImageBitmap() }
                 CampsiteDetailsScreen(
                     name = campsite.name,
                     imageId = campsite.imageId,
@@ -197,6 +195,9 @@ fun OwnerNavGraph(
                     onMapClick = if (lat != null && lon != null) {
                         { uriHandler.openUri("https://www.google.com/maps/search/?api=1&query=$lat,$lon") }
                     } else null,
+                    qrBitmap = qr,
+                    notice = screen.notice,
+                    onDismissNotice = screen::dismissNotice,
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -316,15 +317,6 @@ fun OwnerNavGraph(
                     modifier = Modifier.padding(innerPadding),
                 )
             }
-            profileRoutes(
-                navController = navController,
-                userId = ownerId,
-                entrantRepo = entrantRepo,
-                ownerRepo = ownerRepo,
-                imageRepo = imageRepo,
-                syncOwner = true,
-                modifier = Modifier.padding(innerPadding),
-            )
         }
     }
 }
